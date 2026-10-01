@@ -1,0 +1,6 @@
+{
+  "name": "አርሶ አደር",
+  "description": "የኢትዮጵያ አርሶ አደሮች የአፈር ማዳበሪያ ተራ ማወቂያ፣ የግብአት ክፍያ፣ የቀጥታ ጂፒኤስ ጭነት መከታተያ፣ የመሬት ልክ መመዝገቢያና ያለ ደላላ የሰብል መሸጫ ዘመናዊ መተግበሪያ።",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
