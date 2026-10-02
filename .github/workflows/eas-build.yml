@@ -20,8 +20,10 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Accept Android SDK Licenses
-        run: yes | sdkmanager --licenses
+      - name: Accept Android SDK Licenses Automatically
+        uses: subosito/gh-action-sdkmanager@v2
+        with:
+          sdkmanager-version: 'latest'
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
