@@ -1,6 +1,7 @@
 package com.example.data.repository
 
 import com.example.data.local.FarmerDao
+import com.example.data.model.ExpenseRecord
 import com.example.data.model.FarmerProfile
 import com.example.data.model.FertilizerQueueToken
 import com.example.data.model.FertilizerShipment
@@ -11,18 +12,18 @@ import kotlinx.coroutines.flow.Flow
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.UUID
 
 class ArsoAderRepository(private val dao: FarmerDao) {
 
     val farmerProfile: Flow<FarmerProfile?> = dao.getFarmerProfile()
+    val allFarmerProfiles: Flow<List<FarmerProfile>> = dao.getAllFarmerProfiles()
     val activeToken: Flow<FertilizerQueueToken?> = dao.getActiveQueueToken()
     val allPayments: Flow<List<PaymentRecord>> = dao.getAllPayments()
+    val allExpenses: Flow<List<ExpenseRecord>> = dao.getAllExpenses()
     val allCrops: Flow<List<MarketCropItem>> = dao.getAllCrops()
 
     suspend fun saveFarmerProfile(profile: FarmerProfile) {
         dao.insertOrUpdateProfile(profile)
-        // Automatically calculate and assign/update fertilizer quota token based on land size!
         val npsbCount = (profile.landSizeHectares * 1.5).toInt().coerceAtLeast(1)
         val ureaCount = (profile.landSizeHectares * 1.5).toInt().coerceAtLeast(1)
         val defaultToken = FertilizerQueueToken(
@@ -59,22 +60,55 @@ class ArsoAderRepository(private val dao: FarmerDao) {
     }
 
     suspend fun recordPayment(
-        type: String,
+        paymentTitle: String,
+        categoryKey: String,
         amount: Double,
         provider: String,
         phone: String,
+        farmerId: String,
+        farmerName: String,
+        kebele: String,
         notes: String
     ): PaymentRecord {
+        val nextNum = (1000..9999).random()
         val record = PaymentRecord(
             referenceId = "PAY-${(100000..999999).random()}",
-            paymentType = type,
+            receiptOfficialNumber = "KB-REC-2026-$nextNum",
+            paymentTitle = paymentTitle,
+            paymentType = paymentTitle,
+            categoryKey = categoryKey,
             amountBirr = amount,
             provider = provider,
             status = "የተከፈለ",
             payerPhone = phone,
+            farmerId = farmerId,
+            farmerName = farmerName,
+            kebele = kebele,
             receiptNotes = notes
         )
         dao.insertPayment(record)
+        return record
+    }
+
+    suspend fun recordExpense(
+        title: String,
+        category: String,
+        amount: Double,
+        kebele: String,
+        paidTo: String,
+        notes: String
+    ): ExpenseRecord {
+        val voucherNum = "PV-2026-${(100..999).random()}"
+        val record = ExpenseRecord(
+            expenseTitle = title,
+            category = category,
+            amountBirr = amount,
+            kebele = kebele,
+            paidTo = paidTo,
+            voucherNumber = voucherNum,
+            notes = notes
+        )
+        dao.insertExpense(record)
         return record
     }
 
@@ -104,10 +138,12 @@ class ArsoAderRepository(private val dao: FarmerDao) {
     suspend fun seedInitialDataIfEmpty() {
         val currentProfile = dao.getFarmerProfileSync()
         if (currentProfile == null) {
-            val sampleProfile = FarmerProfile(
+            // Seed a realistic pool of registered male and female farmers in the Kebele
+            val primaryFarmer = FarmerProfile(
                 id = "primary_farmer",
                 fullName = "አበበ ታደሰ ወርቁ",
                 phoneNumber = "0911234567",
+                gender = "ወንድ",
                 nationality = "ኢትዮጵያዊ",
                 region = "አማራ",
                 zone = "ምዕራብ ጎጃም",
@@ -119,14 +155,135 @@ class ArsoAderRepository(private val dao: FarmerDao) {
                 landSizeTimad = 10.0,
                 annualTaxBirr = 450.0,
                 primaryCrops = "ማኛ ጤፍ፣ ነጭ ስንዴ፣ ቀይ በቆሎ",
+                bankName = "የኢትዮጵያ ንግድ ባንክ (CBE)",
+                bankAccountNumber = "1000284910294",
+                bankAccountHolder = "አበበ ታደሰ ወርቁ",
+                avatarPreset = "man_1",
                 isRegistered = true
             )
-            dao.insertOrUpdateProfile(sampleProfile)
+            dao.insertOrUpdateProfile(primaryFarmer)
+
+            val otherFarmers = listOf(
+                FarmerProfile(
+                    id = "farmer_f1",
+                    fullName = "ወ/ሮ ፋንቱ ተሾመ መንገሻ",
+                    phoneNumber = "0921456789",
+                    gender = "ሴት",
+                    nationality = "ኢትዮጵያዊ",
+                    region = "አማራ",
+                    zone = "ምዕራብ ጎጃም",
+                    woreda = "ይስማላ / መርዓዊ",
+                    kebele = "አዴት 01 ቀበሌ",
+                    nationalId = "FAN-93821045",
+                    kebeleId = "KB-AD-0112",
+                    landSizeHectares = 1.8,
+                    landSizeTimad = 7.2,
+                    annualTaxBirr = 340.0,
+                    primaryCrops = "ጤፍ፣ ቦሎቄ፣ አተር",
+                    bankName = "አዋሽ ባንክ (Awash Bank)",
+                    bankAccountNumber = "01320492817200",
+                    bankAccountHolder = "ፋንቱ ተሾመ",
+                    avatarPreset = "woman_1",
+                    isRegistered = true
+                ),
+                FarmerProfile(
+                    id = "farmer_m2",
+                    fullName = "አቶ ገብረማርያም ከበደ አያሌው",
+                    phoneNumber = "0932567890",
+                    gender = "ወንድ",
+                    nationality = "ኢትዮጵያዊ",
+                    region = "አማራ",
+                    zone = "ምዕራብ ጎጃም",
+                    woreda = "ይስማላ / መርዓዊ",
+                    kebele = "አዴት 01 ቀበሌ",
+                    nationalId = "FAN-71049283",
+                    kebeleId = "KB-AD-0235",
+                    landSizeHectares = 3.2,
+                    landSizeTimad = 12.8,
+                    annualTaxBirr = 580.0,
+                    primaryCrops = "ነጭ ስንዴ፣ ገብስ፣ ዳጉሳ",
+                    bankName = "የኦሮሚያ ህ/ስራ ባንክ (Coop Bank)",
+                    bankAccountNumber = "1002948201948",
+                    bankAccountHolder = "ገብረማርያም ከበደ",
+                    avatarPreset = "man_2",
+                    isRegistered = true
+                ),
+                FarmerProfile(
+                    id = "farmer_f2",
+                    fullName = "ወ/ሮ ብርቱካን አስፋው ኃይሌ",
+                    phoneNumber = "0943678901",
+                    gender = "ሴት",
+                    nationality = "ኢትዮጵያዊ",
+                    region = "አማራ",
+                    zone = "ምዕራብ ጎጃም",
+                    woreda = "ይስማላ / መርዓዊ",
+                    kebele = "አዴት 01 ቀበሌ",
+                    nationalId = "FAN-64920194",
+                    kebeleId = "KB-AD-0389",
+                    landSizeHectares = 2.0,
+                    landSizeTimad = 8.0,
+                    annualTaxBirr = 380.0,
+                    primaryCrops = "በቆሎ፣ ማሽላ፣ ባቄላ",
+                    bankName = "የኢትዮጵያ ንግድ ባንክ (CBE)",
+                    bankAccountNumber = "1000392019482",
+                    bankAccountHolder = "ብርቱካን አስፋው",
+                    avatarPreset = "woman_2",
+                    isRegistered = true
+                ),
+                FarmerProfile(
+                    id = "farmer_m3",
+                    fullName = "አቶ ደሳለኝ ሞገስ ታምራት",
+                    phoneNumber = "0954789012",
+                    gender = "ወንድ",
+                    nationality = "ኢትዮጵያዊ",
+                    region = "አማራ",
+                    zone = "ምዕራብ ጎጃም",
+                    woreda = "ይስማላ / መርዓዊ",
+                    kebele = "አዴት 01 ቀበሌ",
+                    nationalId = "FAN-52019482",
+                    kebeleId = "KB-AD-0541",
+                    landSizeHectares = 2.4,
+                    landSizeTimad = 9.6,
+                    annualTaxBirr = 440.0,
+                    primaryCrops = "ማኛ ጤፍ፣ በቆሎ",
+                    bankName = "ዳሸን ባንክ (Dashen Bank)",
+                    bankAccountNumber = "5192049281029",
+                    bankAccountHolder = "ደሳለኝ ሞገስ",
+                    avatarPreset = "man_1",
+                    isRegistered = true
+                ),
+                FarmerProfile(
+                    id = "farmer_f3",
+                    fullName = "ወ/ሮ አልማዝ በላይነህ ዘለቀ",
+                    phoneNumber = "0965890123",
+                    gender = "ሴት",
+                    nationality = "ኢትዮጵያዊ",
+                    region = "አማራ",
+                    zone = "ምዕራብ ጎጃም",
+                    woreda = "ይስማላ / መርዓዊ",
+                    kebele = "አዴት 01 ቀበሌ",
+                    nationalId = "FAN-41092837",
+                    kebeleId = "KB-AD-0672",
+                    landSizeHectares = 1.5,
+                    landSizeTimad = 6.0,
+                    annualTaxBirr = 300.0,
+                    primaryCrops = "ጤፍ፣ ስንዴ፣ ሽንብራ",
+                    bankName = "አባይ ባንክ (Abay Bank)",
+                    bankAccountNumber = "2094820192841",
+                    bankAccountHolder = "አልማዝ በላይነህ",
+                    avatarPreset = "woman_1",
+                    isRegistered = true
+                )
+            )
+
+            for (farmer in otherFarmers) {
+                dao.insertOrUpdateProfile(farmer)
+            }
 
             val initialToken = FertilizerQueueToken(
                 tokenCode = "ET-AGR-7281",
                 queueNumber = 48,
-                farmerName = sampleProfile.fullName,
+                farmerName = primaryFarmer.fullName,
                 kebeleDepot = "አዴት 01 ቀበሌ የግብርና ህ/ስ/ማህበር መጋዘን",
                 scheduledDate = "ነሐሴ 25 / ዛሬ",
                 timeSlot = "ከጧቱ 3:00 - 5:30",
@@ -137,18 +294,134 @@ class ArsoAderRepository(private val dao: FarmerDao) {
             )
             dao.insertQueueToken(initialToken)
 
-            val samplePayment = PaymentRecord(
-                referenceId = "TLB-948201",
-                paymentType = "የአፈር ማዳበሪያ ክፍያ (4 ኩንታል NPSB + 3 ኩንታል ዩሪያ)",
-                amountBirr = 28650.0,
-                provider = "Telebirr (ቴሌብር)",
-                status = "የተከፈለ",
-                payerPhone = "0911234567",
-                receiptNotes = "ክፍያው በስኬት ተፈፅሟል፤ በመጋዘን ደረሰኙን ያሳዩ"
+            // Seed initial income payment records with individual titles
+            val payments = listOf(
+                PaymentRecord(
+                    referenceId = "TLB-948201",
+                    receiptOfficialNumber = "KB-REC-2026-0041",
+                    paymentTitle = "የአፈር ማዳበሪያ ክፍያ (4 ኩንታል NPSB + 3 ኩንታል ዩሪያ)",
+                    paymentType = "የአፈር ማዳበሪያ",
+                    categoryKey = "FERTILIZER",
+                    amountBirr = 28650.0,
+                    provider = "Telebirr (ቴሌብር)",
+                    status = "የተከፈለ",
+                    payerPhone = "0911234567",
+                    farmerId = "primary_farmer",
+                    farmerName = "አበበ ታደሰ ወርቁ",
+                    kebele = "አዴት 01 ቀበሌ",
+                    receiptNotes = "ክፍያው በስኬት ተፈፅሟል፤ በመጋዘን ደረሰኙን ያሳዩ"
+                ),
+                PaymentRecord(
+                    referenceId = "CBE-829104",
+                    receiptOfficialNumber = "KB-REC-2026-0042",
+                    paymentTitle = "ዓመታዊ የመሬት መጠቀሚያ ግብር",
+                    paymentType = "የመሬት ግብር",
+                    categoryKey = "LAND_TAX",
+                    amountBirr = 450.0,
+                    provider = "CBE Birr (ሲቢኢ)",
+                    status = "የተከፈለ",
+                    payerPhone = "0911234567",
+                    farmerId = "primary_farmer",
+                    farmerName = "አበበ ታደሰ ወርቁ",
+                    kebele = "አዴት 01 ቀበሌ",
+                    receiptNotes = "የ2016/2017 ዓ.ም የመሬት ግብር የተከፈለ"
+                ),
+                PaymentRecord(
+                    referenceId = "AWB-619283",
+                    receiptOfficialNumber = "KB-REC-2026-0043",
+                    paymentTitle = "የተሻሻለ ምርጥ ዘር (ማኛ ጤፍ 50 ኪ.ግ)",
+                    paymentType = "የተሻሻለ ምርጥ ዘር",
+                    categoryKey = "SEED",
+                    amountBirr = 5200.0,
+                    provider = "Telebirr (ቴሌብር)",
+                    status = "የተከፈለ",
+                    payerPhone = "0921456789",
+                    farmerId = "farmer_f1",
+                    farmerName = "ወ/ሮ ፋንቱ ተሾመ መንገሻ",
+                    kebele = "አዴት 01 ቀበሌ",
+                    receiptNotes = "ከቀበሌ ምርጥ ዘር ማዕከል የተረከቡ"
+                ),
+                PaymentRecord(
+                    referenceId = "CPY-510294",
+                    receiptOfficialNumber = "KB-REC-2026-0044",
+                    paymentTitle = "የገጠር መሬት ይዞታ ማረጋገጫ ካርታ (የደብተር ክፍያ)",
+                    paymentType = "የይዞታ ማረጋገጫ ካርታ",
+                    categoryKey = "LAND_TITLING",
+                    amountBirr = 600.0,
+                    provider = "Coopay (ኮኦፕ)",
+                    status = "የተከፈለ",
+                    payerPhone = "0932567890",
+                    farmerId = "farmer_m2",
+                    farmerName = "አቶ ገብረማርያም ከበደ አያሌው",
+                    kebele = "አዴት 01 ቀበሌ",
+                    receiptNotes = "የቀበሌ መሬት አስተዳደር ይዞታ ካርታ የተሰጠ"
+                ),
+                PaymentRecord(
+                    referenceId = "TLB-492019",
+                    receiptOfficialNumber = "KB-REC-2026-0045",
+                    paymentTitle = "የቀበሌ የጋራ መስኖ ውሃ አገልግሎት ክፍያ",
+                    paymentType = "የመስኖ ውሃ ክፍያ",
+                    categoryKey = "IRRIGATION",
+                    amountBirr = 350.0,
+                    provider = "Telebirr (ቴሌብር)",
+                    status = "የተከፈለ",
+                    payerPhone = "0943678901",
+                    farmerId = "farmer_f2",
+                    farmerName = "ወ/ሮ ብርቱካን አስፋው ኃይሌ",
+                    kebele = "አዴት 01 ቀበሌ",
+                    receiptNotes = "የደረቅ ወቅት የመስኖ ውሃ ድርሻ ክፍያ"
+                )
             )
-            dao.insertPayment(samplePayment)
 
-            // Seed direct farmer crops for the marketplace
+            for (payment in payments) {
+                dao.insertPayment(payment)
+            }
+
+            // Seed initial Kebele expenses (የወጪ መዝገቦች)
+            val expenses = listOf(
+                ExpenseRecord(
+                    expenseTitle = "ለግብርና ሚኒስቴር የአፈር ማዳበሪያ ግዢ የተላለፈ",
+                    category = "የማዳበሪያ ግዢ",
+                    amountBirr = 22400.0,
+                    kebele = "አዴት 01 ቀበሌ",
+                    paidTo = "የኢትዮጵያ ግብርና ስራዎች ኮርፖሬሽን",
+                    voucherNumber = "PV-2026-0012",
+                    notes = "ለአዴት ቀበሌ ማዳበሪያ ኮታ ማሟያ የተፈፀመ"
+                ),
+                ExpenseRecord(
+                    expenseTitle = "የማዳበሪያና ምርጥ ዘር ከዞን መጋዘን የጭነት ትራንስፖርት",
+                    category = "ትራንስፖርትና ሎጀስቲክስ",
+                    amountBirr = 3800.0,
+                    kebele = "አዴት 01 ቀበሌ",
+                    paidTo = "ጎጃም የትራንስፖርት ማህበር",
+                    voucherNumber = "PV-2026-0013",
+                    notes = "ከባህር ዳር ማከፋፈያ ወደ አዴት ቀበሌ ህ/ስራ ማህበር"
+                ),
+                ExpenseRecord(
+                    expenseTitle = "የቀበሌ ግብአት መጋዘን ኪራይና የጥበቃ አበል",
+                    category = "የመጋዘን ኪራይና ጥበቃ",
+                    amountBirr = 2500.0,
+                    kebele = "አዴት 01 ቀበሌ",
+                    paidTo = "የቀበሌው ጥበቃ ቡድን",
+                    voucherNumber = "PV-2026-0014",
+                    notes = "የነሐሴ ወር የመጋዘን ጥበቃ"
+                ),
+                ExpenseRecord(
+                    expenseTitle = "የአዴት ማዕከላዊ መስኖ ቦይ ጥገናና ጽዳት",
+                    category = "የመስኖ መሰረተ ልማት",
+                    amountBirr = 1800.0,
+                    kebele = "አዴት 01 ቀበሌ",
+                    paidTo = "የቀበሌ የመስኖ ተጠቃሚዎች ኮሚቴ",
+                    voucherNumber = "PV-2026-0015",
+                    notes = "የመስኖ ቦይ ደለል ማጽጃና ማስተካከያ"
+                )
+            )
+
+            for (expense in expenses) {
+                dao.insertExpense(expense)
+            }
+
+            // Seed direct farmer crops
             val crops = listOf(
                 MarketCropItem(
                     cropName = "ማኛ ጤፍ (የመጀመሪያ ደረጃ)",

@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 
 /**
  * Farmer profile containing complete biographical, identification,
- * land, and tax information.
+ * land, bank linkage, and photo dossier information.
  */
 @Entity(tableName = "farmer_profiles")
 data class FarmerProfile(
@@ -13,6 +13,7 @@ data class FarmerProfile(
     val id: String = "primary_farmer",
     val fullName: String = "",
     val phoneNumber: String = "",
+    val gender: String = "ወንድ", // "ወንድ" ወይም "ሴት" (System auto-calculates male/female ratio)
     val nationality: String = "ኢትዮጵያዊ",
     val region: String = "አማራ",
     val zone: String = "ምዕራብ ጎጃም",
@@ -24,6 +25,16 @@ data class FarmerProfile(
     val landSizeTimad: Double = 8.0,    // በቃዳ/በጥማድ (1 ሄክታር = 4 ጥማድ)
     val annualTaxBirr: Double = 380.0,  // መክፈል ያለባቸው የግብር መጠን በብር
     val primaryCrops: String = "ነጭ ጤፍ፣ ስንዴ፣ በቆሎ",
+
+    // Bank Account Linkage (የተያያዘ የባንክ ሂሳብ)
+    val bankName: String = "የኢትዮጵያ ንግድ ባንክ (CBE)",
+    val bankAccountNumber: String = "1000284910294",
+    val bankAccountHolder: String = "",
+
+    // Profile Photo in Dossier (ፎቶ በፕሮፋይል ማህደር)
+    val photoUri: String = "", // Custom photo URI if selected
+    val avatarPreset: String = "man_1", // "man_1", "woman_1", "man_2", "woman_2"
+
     val isRegistered: Boolean = false,
     val registeredDate: Long = System.currentTimeMillis()
 )
@@ -48,19 +59,43 @@ data class FertilizerQueueToken(
 )
 
 /**
- * Payment record for inputs or agricultural taxes
+ * Payment record for inputs, land tax, titles, or irrigation.
+ * System issues individual verified receipts for every title.
  */
 @Entity(tableName = "payment_records")
 data class PaymentRecord(
     @PrimaryKey
     val referenceId: String, // e.g. "TLB-7492038"
-    val paymentType: String, // "የአፈር ማዳበሪያ ክፍያ", "የመሬት ግብር", "የተሻሻለ ዘር"
+    val receiptOfficialNumber: String = "KB-REC-001", // ህጋዊ የደረሰኝ ቁጥር
+    val paymentTitle: String, // "የአፈር ማዳበሪያ (NPSB & ዩሪያ)", "የመሬት ግብር", "የተሻሻለ ምርጥ ዘር", "የይዞታ ማረጋገጫ ካርታ", "የመስኖ ውሃ አገልግሎት"
+    val paymentType: String, // Legacy compatibility
+    val categoryKey: String = "FERTILIZER", // FERTILIZER, LAND_TAX, SEED, LAND_TITLING, IRRIGATION
     val amountBirr: Double,
-    val provider: String,    // "Telebirr (ቴሌብር)", "CBE Birr (ሲቢኢ)", "Coopay (ኮኦፕ)"
-    val status: String,      // "የተከፈለ", "በመጠባበቅ ላይ"
+    val provider: String,    // "Telebirr (ቴሌብር)", "CBE Birr (ሲቢኢ)", "Coopay (ኮኦፕ)", "የባንክ ቀጥታ ዝውውር"
+    val status: String = "የተከፈለ",      // "የተከፈለ", "በመጠባበቅ ላይ"
     val payerPhone: String,
+    val farmerId: String = "primary_farmer",
+    val farmerName: String = "",
+    val kebele: String = "አዴት 01 ቀበሌ",
     val timestamp: Long = System.currentTimeMillis(),
     val receiptNotes: String = ""
+)
+
+/**
+ * Kebele Agricultural & Land Administration Office Expense Record (የወጪ መዝገብ)
+ */
+@Entity(tableName = "expense_records")
+data class ExpenseRecord(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val expenseTitle: String, // e.g. "ለግብርና ሚኒስቴር የማዳበሪያ ግዢ ክፍያ", "የጭነት ትራንስፖርትና ነዳጅ ወጪ"
+    val category: String,     // "የማዳበሪያ ግዢ", "ትራንስፖርትና ሎጀስቲክስ", "የመጋዘን ኪራይና ጥበቃ", "የመስኖ መሰረተ ልማት"
+    val amountBirr: Double,
+    val kebele: String = "አዴት 01 ቀበሌ",
+    val paidTo: String,       // ተከፋይ አካል (ለምሳሌ፦ "የኢትዮጵያ ግብርና ስራዎች ኮርፖሬሽን")
+    val voucherNumber: String, // የክፍያ ማዘዣ ቫውቸር ቁጥር e.g. "PV-2026-084"
+    val timestamp: Long = System.currentTimeMillis(),
+    val notes: String = ""
 )
 
 /**
@@ -78,6 +113,23 @@ data class MarketCropItem(
     val pricePerQuintal: Double,
     val isOrganic: Boolean = true,
     val postDate: Long = System.currentTimeMillis()
+)
+
+/**
+ * Aggregated Kebele Land Administration Statistics calculated automatically
+ */
+data class KebeleStatistics(
+    val kebeleName: String,
+    val totalFarmers: Int,
+    val maleFarmers: Int,
+    val femaleFarmers: Int,
+    val malePercentage: Float,
+    val femalePercentage: Float,
+    val totalLandHectares: Double,
+    val totalRevenueBirr: Double,
+    val totalExpenseBirr: Double,
+    val netBalanceBirr: Double,
+    val revenueByCategory: Map<String, Double>
 )
 
 /**

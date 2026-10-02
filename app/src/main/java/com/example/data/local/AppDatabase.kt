@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.data.model.ExpenseRecord
 import com.example.data.model.FarmerProfile
 import com.example.data.model.FertilizerQueueToken
 import com.example.data.model.MarketCropItem
@@ -14,9 +15,10 @@ import com.example.data.model.PaymentRecord
         FarmerProfile::class,
         FertilizerQueueToken::class,
         PaymentRecord::class,
+        ExpenseRecord::class,
         MarketCropItem::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

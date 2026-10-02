@@ -1,6 +1,10 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,12 +22,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Female
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Grass
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Landscape
+import androidx.compose.material.icons.filled.Male
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
@@ -41,19 +48,22 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.data.model.FarmerProfile
+import java.io.File
 
 @Composable
 fun OnboardingProfileScreen(
@@ -61,6 +71,7 @@ fun OnboardingProfileScreen(
     onSaveProfile: (
         fullName: String,
         phone: String,
+        gender: String,
         nationality: String,
         region: String,
         zone: String,
@@ -71,12 +82,18 @@ fun OnboardingProfileScreen(
         landHectares: Double,
         landTimad: Double,
         taxBirr: Double,
-        primaryCrops: String
+        primaryCrops: String,
+        bankName: String,
+        bankAccountNumber: String,
+        bankAccountHolder: String,
+        avatarPreset: String,
+        photoUri: String
     ) -> Unit,
     onVoiceClick: (String) -> Unit
 ) {
     var fullName by remember { mutableStateOf(currentProfile?.fullName ?: "") }
     var phone by remember { mutableStateOf(currentProfile?.phoneNumber ?: "") }
+    var gender by remember { mutableStateOf(currentProfile?.gender ?: "ወንድ") }
     var nationality by remember { mutableStateOf(currentProfile?.nationality ?: "ኢትዮጵያዊ") }
     var region by remember { mutableStateOf(currentProfile?.region ?: "አማራ") }
     var zone by remember { mutableStateOf(currentProfile?.zone ?: "ምዕራብ ጎጃም") }
@@ -89,10 +106,20 @@ fun OnboardingProfileScreen(
     var taxBirrStr by remember { mutableStateOf(currentProfile?.annualTaxBirr?.toString() ?: "450.0") }
     var primaryCrops by remember { mutableStateOf(currentProfile?.primaryCrops ?: "ማኛ ጤፍ፣ ነጭ ስንዴ፣ በቆሎ") }
 
+    // Bank Account State
+    var bankName by remember { mutableStateOf(currentProfile?.bankName ?: "የኢትዮጵያ ንግድ ባንክ (CBE)") }
+    var bankAccountNumber by remember { mutableStateOf(currentProfile?.bankAccountNumber ?: "1000284910294") }
+    var bankAccountHolder by remember { mutableStateOf(currentProfile?.bankAccountHolder ?: (currentProfile?.fullName ?: "")) }
+
+    // Photo Avatar Preset State
+    var avatarPreset by remember { mutableStateOf(currentProfile?.avatarPreset ?: "man_1") }
+    var photoUri by remember { mutableStateOf(currentProfile?.photoUri ?: "") }
+
     LaunchedEffect(currentProfile) {
         if (currentProfile != null) {
             fullName = currentProfile.fullName
             phone = currentProfile.phoneNumber
+            gender = currentProfile.gender
             nationality = currentProfile.nationality
             region = currentProfile.region
             zone = currentProfile.zone
@@ -104,6 +131,11 @@ fun OnboardingProfileScreen(
             landTimadStr = currentProfile.landSizeTimad.toString()
             taxBirrStr = currentProfile.annualTaxBirr.toString()
             primaryCrops = currentProfile.primaryCrops
+            bankName = currentProfile.bankName
+            bankAccountNumber = currentProfile.bankAccountNumber
+            bankAccountHolder = currentProfile.bankAccountHolder
+            avatarPreset = currentProfile.avatarPreset
+            photoUri = currentProfile.photoUri
         }
     }
 
@@ -148,13 +180,13 @@ fun OnboardingProfileScreen(
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "የአርሶ አደር አንድ ጊዜ ምዝገባ",
+                                text = "የአርሶ አደር ማህደርና ምዝገባ",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             Text(
-                                text = "ይህ መረጃ የማዳበሪያ ኮታዎትንና ተራዎትን ለመወሰን ይረዳል",
+                                text = "ፎቶ፣ የባንክ ሂሳብ፣ ጾታ እና የመሬት መረጃ ማህደር",
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                             )
@@ -164,7 +196,7 @@ fun OnboardingProfileScreen(
                     IconButton(
                         onClick = {
                             onVoiceClick(
-                                "እዚህ ገፅ ላይ ሙሉ ስምዎን፣ ስልክዎን፣ ዜግነትዎን፣ አድራሻዎን፣ ብሔራዊ እና የቀበሌ መታወቂያዎን፣ የመሬት መጠንዎን እና የሚጠበቅቦትን ግብር ይመዝግቡ። ይህ መረጃ አንዴ ከተሞላ በኋላ ያለ ኢንተርኔት በስልኮ ውስጥ ይቀመጣል።"
+                                "እዚህ ማህደር ላይ ፎቶዎን፣ ጾታዎን፣ ስምዎን፣ አድራሻዎን፣ የባንክ አካውንትዎን እና የመሬትዎን ልክ ያስመዝግቡ። የቀበሌው ግብርና ጽ/ቤት የሴትና ወንድ ድምርን በዚህ መረጃ መሰረት ያሰላል።"
                             )
                         }
                     ) {
@@ -178,7 +210,139 @@ fun OnboardingProfileScreen(
             }
         }
 
-        // Section 1: የግል መረጃ (Personal Data)
+        // Section 0: የአርሶ አደሩ ፎቶ እና ጾታ (Photo & Gender in Dossier)
+        item {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "የአርሶ አደሩ ፎቶ በማህደር (Profile Photo)",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.align(Alignment.Start)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    val photoFile = if (gender == "ሴት") {
+                        File("/app/src/main/res/drawable/farmer_ethiopian_woman_1790921555784.jpg")
+                    } else {
+                        File("/app/src/main/res/drawable/farmer_ethiopian_man_1790921542582.jpg")
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(CircleShape)
+                            .border(3.dp, if (gender == "ሴት") Color(0xFFC2185B) else Color(0xFF1976D2), CircleShape)
+                    ) {
+                        if (photoFile.exists()) {
+                            AsyncImage(
+                                model = photoFile,
+                                contentDescription = "የአርሶ አደር ፎቶ",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(if (gender == "ሴት") Color(0xFFFCE4EC) else Color(0xFFE3F2FD)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = if (gender == "ሴት") Icons.Default.Female else Icons.Default.Male,
+                                    contentDescription = null,
+                                    tint = if (gender == "ሴት") Color(0xFFC2185B) else Color(0xFF1976D2),
+                                    modifier = Modifier.size(50.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Gender Selector (ወንድ / ሴት)
+                    Text(
+                        text = "ጾታ ይምረጡ (ለቀበሌው ጽ/ቤት ስታቲስቲክስ የሚሰላ)፦",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.DarkGray
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Surface(
+                            onClick = { gender = "ወንድ" },
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (gender == "ወንድ") Color(0xFF1976D2) else Color(0xFFF0F4F8),
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("select_gender_male")
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(vertical = 10.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Male,
+                                    contentDescription = null,
+                                    tint = if (gender == "ወንድ") Color.White else Color.Black,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "ወንድ",
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (gender == "ወንድ") Color.White else Color.Black
+                                )
+                            }
+                        }
+
+                        Surface(
+                            onClick = { gender = "ሴት" },
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (gender == "ሴት") Color(0xFFC2185B) else Color(0xFFF0F4F8),
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("select_gender_female")
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(vertical = 10.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Female,
+                                    contentDescription = null,
+                                    tint = if (gender == "ሴት") Color.White else Color.Black,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "ሴት",
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (gender == "ሴት") Color.White else Color.Black
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Section 1: የግል እና የመታወቂያ መረጃ
         item {
             Card(
                 shape = RoundedCornerShape(16.dp),
@@ -266,7 +430,7 @@ fun OnboardingProfileScreen(
             }
         }
 
-        // Section 2: አድራሻ (Address)
+        // Section 2: የተያያዘ የባንክ ሂሳብ መረጃ (Bank Account Linkage)
         item {
             Card(
                 shape = RoundedCornerShape(16.dp),
@@ -276,7 +440,87 @@ fun OnboardingProfileScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "2. የአርሶ አደሩ አድራሻ",
+                        text = "2. የተያያዘ የባንክ ሂሳብ (Bank Account Linkage)",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = Color(0xFF005BAC)
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(text = "የባንኩን ስም ይምረጡ፦", fontSize = 12.sp, color = Color.Gray)
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    val bankOptions = listOf(
+                        "የኢትዮጵያ ንግድ ባንክ (CBE)",
+                        "አዋሽ ባንክ (Awash Bank)",
+                        "የኦሮሚያ ህ/ስራ ባንክ (Coop)",
+                        "ዳሸን ባንክ (Dashen Bank)",
+                        "አባይ ባንክ (Abay Bank)"
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        bankOptions.take(3).forEach { bName ->
+                            Surface(
+                                onClick = { bankName = bName },
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (bankName == bName) Color(0xFF005BAC) else Color(0xFFF0F4F8),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = bName.substringBefore(" "),
+                                    fontSize = 11.sp,
+                                    fontWeight = if (bankName == bName) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (bankName == bName) Color.White else Color.Black,
+                                    modifier = Modifier.padding(vertical = 8.dp),
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = bankAccountNumber,
+                        onValueChange = { bankAccountNumber = it },
+                        label = { Text("የባንክ ሂሳብ ቁጥር (Account Number) *") },
+                        leadingIcon = { Icon(Icons.Default.AccountBalance, contentDescription = null) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("input_bank_account"),
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = bankAccountHolder,
+                        onValueChange = { bankAccountHolder = it },
+                        label = { Text("የሂሳብ ባለቤት ሙሉ ስም") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true
+                    )
+                }
+            }
+        }
+
+        // Section 3: አድራሻ (Address)
+        item {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "3. የአርሶ አደሩ አድራሻ",
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
                         color = MaterialTheme.colorScheme.primary
@@ -336,7 +580,7 @@ fun OnboardingProfileScreen(
             }
         }
 
-        // Section 3: የመሬት መጠን እና የግብር መጠን (Land size & Tax info)
+        // Section 4: የመሬት መጠን እና ዓመታዊ ግብር
         item {
             Card(
                 shape = RoundedCornerShape(16.dp),
@@ -346,7 +590,7 @@ fun OnboardingProfileScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "3. የመሬት ስፋት፣ ሰብል እና ዓመታዊ ግብር",
+                        text = "4. የመሬት ስፋት፣ ሰብል እና ዓመታዊ ግብር",
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
                         color = MaterialTheme.colorScheme.primary
@@ -435,6 +679,7 @@ fun OnboardingProfileScreen(
                     onSaveProfile(
                         fullName,
                         phone,
+                        gender,
                         nationality,
                         region,
                         zone,
@@ -445,7 +690,12 @@ fun OnboardingProfileScreen(
                         hectares,
                         timad,
                         tax,
-                        primaryCrops
+                        primaryCrops,
+                        bankName,
+                        bankAccountNumber,
+                        bankAccountHolder,
+                        avatarPreset,
+                        photoUri
                     )
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
@@ -458,7 +708,7 @@ fun OnboardingProfileScreen(
                 Icon(imageVector = Icons.Default.Check, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "መረጃዬን መዝግብና አስቀምጥ",
+                    text = "መረጃዬን መዝግብና በማህደር አስቀምጥ",
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )

@@ -21,17 +21,21 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Grass
 import androidx.compose.material.icons.filled.Landscape
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Science
 import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -60,19 +64,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.FarmerProfile
 import com.example.data.model.PaymentRecord
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @Composable
 fun PaymentScreen(
     profile: FarmerProfile?,
     pastPayments: List<PaymentRecord>,
-    onProcessPayment: (type: String, amount: Double, provider: String, phone: String, notes: String) -> Unit,
+    onProcessPayment: (title: String, categoryKey: String, amount: Double, provider: String, phone: String, notes: String) -> Unit,
+    onViewReceipt: (PaymentRecord) -> Unit,
     onVoiceClick: (String) -> Unit
 ) {
     var selectedProvider by remember { mutableStateOf("Telebirr (ቴሌብር)") }
-    var selectedCategory by remember { mutableStateOf("የአፈር ማዳበሪያ") } // "የአፈር ማዳበሪያ", "የመሬት ግብር", "የተሻሻለ ዘር"
+    var selectedCategoryKey by remember { mutableStateOf("FERTILIZER") }
     var npsbBags by remember { mutableIntStateOf(2) }
     var ureaBags by remember { mutableIntStateOf(2) }
     var phoneInput by remember { mutableStateOf(profile?.phoneNumber ?: "0911234567") }
@@ -81,11 +83,24 @@ fun PaymentScreen(
     val ureaPrice = 3950.0 // ETB per quintal
     val landTax = profile?.annualTaxBirr ?: 450.0
     val seedPrice = 5200.0 // ETB for improved seed pack
+    val landTitlingPrice = 600.0 // ETB for land titling card
+    val irrigationPrice = 350.0 // ETB for irrigation water fee
 
-    val totalAmount = when (selectedCategory) {
-        "የአፈር ማዳበሪያ" -> (npsbBags * npsbPrice) + (ureaBags * ureaPrice)
-        "የመሬት ግብር" -> landTax
-        "የተሻሻለ ዘር" -> seedPrice
+    val currentTitle = when (selectedCategoryKey) {
+        "FERTILIZER" -> "የአፈር ማዳበሪያ ክፍያ (NPSB & ዩሪያ)"
+        "LAND_TAX" -> "ዓመታዊ የመሬት መጠቀሚያ ግብር"
+        "SEED" -> "የተሻሻለ ምርጥ ዘር (ማኛ ጤፍ/ስንዴ)"
+        "LAND_TITLING" -> "የገጠር መሬት ይዞታ ማረጋገጫ ካርታ (ደብተር)"
+        "IRRIGATION" -> "የቀበሌ የጋራ መስኖ ውሃ አገልግሎት ክፍያ"
+        else -> "የግብአት ክፍያ"
+    }
+
+    val totalAmount = when (selectedCategoryKey) {
+        "FERTILIZER" -> (npsbBags * npsbPrice) + (ureaBags * ureaPrice)
+        "LAND_TAX" -> landTax
+        "SEED" -> seedPrice
+        "LAND_TITLING" -> landTitlingPrice
+        "IRRIGATION" -> irrigationPrice
         else -> 0.0
     }
 
@@ -130,13 +145,13 @@ fun PaymentScreen(
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "ከቤት ሆነው በሞባይል ይክፈሉ",
+                                text = "ለእያንዳንዱ የክፍያ አርዕስት ህጋዊ ደረሰኝ",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp,
                                 color = Color(0xFFE65100)
                             )
                             Text(
-                                text = "በቀጥታ በቴሌብር ወይም ሲቢኢ ደረሰኝ ወዲያው ይሰጥዎታል",
+                                text = "በሞባይል ወይም በተያያዘ የባንክ ሂሳብ ከቤትዎ ይክፈሉ",
                                 fontSize = 11.sp,
                                 color = Color(0xFF7E3800)
                             )
@@ -146,7 +161,7 @@ fun PaymentScreen(
                     IconButton(
                         onClick = {
                             onVoiceClick(
-                                "የማዳበሪያ፣ የምርጥ ዘር ወይም የመሬት ግብር ክፍያዎን በቴሌብር ወይም በሲቢኢ ብር ከቤትዎ ሆነው መክፈል ይችላሉ። ክፍያው እንዳለቀ ደረሰኙ በስልክዎ ውስጥ ከመስመር ውጭ ይቀመጣል።"
+                                "የማዳበሪያ፣ የመሬት ግብር፣ የምርጥ ዘር፣ የመሬት ካርታ ወይም የመስኖ ክፍያዎን በቴሌብር፣ በሲቢኢ ወይም በተያያዘ የባንክ ሂሳብዎ ይክፈሉ። ሲስተሙ ለእያንዳንዱ ክፍያ ህጋዊ ደረሰኝ በራሱ ያዘጋጅልዎታል።"
                             )
                         }
                     ) {
@@ -160,7 +175,38 @@ fun PaymentScreen(
             }
         }
 
-        // Step 1: የክፍያ ዓይነት ምረጥ (Category Selection)
+        // Linked Bank Account Notice
+        if (profile != null && profile.bankAccountNumber.isNotEmpty()) {
+            item {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFFE3F2FD),
+                    border = BorderStroke(1.dp, Color(0xFF90CAF9)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AccountBalance,
+                            contentDescription = null,
+                            tint = Color(0xFF0D47A1),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "የተያያዘ ባንክዎ፦ ${profile.bankName} (${profile.bankAccountNumber})",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF0D47A1)
+                        )
+                    }
+                }
+            }
+        }
+
+        // Step 1: የክፍያ አርዕስት ምረጥ (5 Categories)
         item {
             Card(
                 shape = RoundedCornerShape(16.dp),
@@ -170,7 +216,7 @@ fun PaymentScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "1. የሚከፍሉትን የግብአት ዓይነት ይምረጡ",
+                        text = "1. የሚከፍሉትን የክፍያ አርዕስት ይምረጡ",
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
                         color = MaterialTheme.colorScheme.primary
@@ -179,74 +225,115 @@ fun PaymentScreen(
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         CategoryChip(
-                            title = "የአፈር ማዳበሪያ",
+                            title = "ማዳበሪያ",
                             icon = Icons.Default.Science,
-                            isSelected = selectedCategory == "የአፈር ማዳበሪያ",
+                            isSelected = selectedCategoryKey == "FERTILIZER",
                             modifier = Modifier.weight(1f),
-                            onClick = { selectedCategory = "የአፈር ማዳበሪያ" }
+                            onClick = { selectedCategoryKey = "FERTILIZER" }
                         )
 
                         CategoryChip(
-                            title = "የመሬት ግብር",
+                            title = "መሬት ግብር",
                             icon = Icons.Default.Landscape,
-                            isSelected = selectedCategory == "የመሬት ግብር",
+                            isSelected = selectedCategoryKey == "LAND_TAX",
                             modifier = Modifier.weight(1f),
-                            onClick = { selectedCategory = "የመሬት ግብር" }
+                            onClick = { selectedCategoryKey = "LAND_TAX" }
                         )
 
                         CategoryChip(
-                            title = "የተሻሻለ ዘር",
+                            title = "ምርጥ ዘር",
                             icon = Icons.Default.Grass,
-                            isSelected = selectedCategory == "የተሻሻለ ዘር",
+                            isSelected = selectedCategoryKey == "SEED",
                             modifier = Modifier.weight(1f),
-                            onClick = { selectedCategory = "የተሻሻለ ዘር" }
+                            onClick = { selectedCategoryKey = "SEED" }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        CategoryChip(
+                            title = "ይዞታ ካርታ",
+                            icon = Icons.Default.Map,
+                            isSelected = selectedCategoryKey == "LAND_TITLING",
+                            modifier = Modifier.weight(1f),
+                            onClick = { selectedCategoryKey = "LAND_TITLING" }
+                        )
+
+                        CategoryChip(
+                            title = "መስኖ ውሃ",
+                            icon = Icons.Default.WaterDrop,
+                            isSelected = selectedCategoryKey == "IRRIGATION",
+                            modifier = Modifier.weight(1f),
+                            onClick = { selectedCategoryKey = "IRRIGATION" }
                         )
                     }
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // Dynamic Quantity controls if Fertilizer
-                    if (selectedCategory == "የአፈር ማዳበሪያ") {
-                        QuantitySelector(
-                            label = "NPSB ማዳበሪያ (በኩንታል)",
-                            pricePerUnit = "4,200 ብር / ኩንታል",
-                            count = npsbBags,
-                            onIncrement = { npsbBags++ },
-                            onDecrement = { if (npsbBags > 0) npsbBags-- }
-                        )
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        QuantitySelector(
-                            label = "ዩሪያ (Urea) ማዳበሪያ (በኩንታል)",
-                            pricePerUnit = "3,950 ብር / ኩንታል",
-                            count = ureaBags,
-                            onIncrement = { ureaBags++ },
-                            onDecrement = { if (ureaBags > 0) ureaBags-- }
-                        )
-                    } else if (selectedCategory == "የመሬት ግብር") {
-                        Text(
-                            text = "ለመሬትዎ የተመደበው ዓመታዊ ግብር፦ ${"%,.2f".format(landTax)} ብር",
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                            color = Color(0xFF2E7D32)
-                        )
-                    } else {
-                        Text(
-                            text = "1 ጆንያ (50 ኪ.ግ) የተመረጠ ማኛ ጤፍ/ስንዴ ምርጥ ዘር፦ 5,200 ብር",
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                            color = Color(0xFF2E7D32)
-                        )
+                    // Dynamic details based on selected category
+                    when (selectedCategoryKey) {
+                        "FERTILIZER" -> {
+                            QuantitySelector(
+                                label = "NPSB ማዳበሪያ (በኩንታል)",
+                                pricePerUnit = "4,200 ብር / ኩንታል",
+                                count = npsbBags,
+                                onIncrement = { npsbBags++ },
+                                onDecrement = { if (npsbBags > 0) npsbBags-- }
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            QuantitySelector(
+                                label = "ዩሪያ (Urea) ማዳበሪያ (በኩንታል)",
+                                pricePerUnit = "3,950 ብር / ኩንታል",
+                                count = ureaBags,
+                                onIncrement = { ureaBags++ },
+                                onDecrement = { if (ureaBags > 0) ureaBags-- }
+                            )
+                        }
+                        "LAND_TAX" -> {
+                            Text(
+                                text = "ለመሬትዎ የተመደበው ዓመታዊ ግብር፦ ${"%,.2f".format(landTax)} ብር",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                color = Color(0xFF2E7D32)
+                            )
+                        }
+                        "SEED" -> {
+                            Text(
+                                text = "1 ጆንያ (50 ኪ.ግ) የተመረጠ ማኛ ጤፍ/ስንዴ ምርጥ ዘር፦ 5,200 ብር",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                color = Color(0xFF2E7D32)
+                            )
+                        }
+                        "LAND_TITLING" -> {
+                            Text(
+                                text = "የገጠር መሬት ይዞታ ማረጋገጫ ካርታ (የደብተር ክፍያ)፦ 600 ብር",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                color = Color(0xFF005BAC)
+                            )
+                        }
+                        "IRRIGATION" -> {
+                            Text(
+                                text = "የቀበሌ የጋራ መስኖ ውሃ አገልግሎት የደረቅ ወቅት ክፍያ፦ 350 ብር",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                color = Color(0xFF0277BD)
+                            )
+                        }
                     }
                 }
             }
         }
 
-        // Step 2: የክፍያ መንገድ ምረጥ (Telebirr / CBE Birr)
+        // Step 2: የመክፈያ መንገድ ምረጥ
         item {
             Card(
                 shape = RoundedCornerShape(16.dp),
@@ -265,7 +352,7 @@ fun PaymentScreen(
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         PaymentProviderCard(
                             name = "Telebirr (ቴሌብር)",
@@ -284,11 +371,11 @@ fun PaymentScreen(
                         )
 
                         PaymentProviderCard(
-                            name = "Coopay (ኮኦፕ)",
-                            color = Color(0xFFE65100),
-                            isSelected = selectedProvider.contains("Coopay"),
+                            name = "የባንክ አካውንት",
+                            color = Color(0xFF0D47A1),
+                            isSelected = selectedProvider.contains("ባንክ"),
                             modifier = Modifier.weight(1f),
-                            onClick = { selectedProvider = "Coopay (ኮኦፕ)" }
+                            onClick = { selectedProvider = "የባንክ ቀጥታ ዝውውር" }
                         )
                     }
 
@@ -319,6 +406,14 @@ fun PaymentScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(18.dp)) {
+                    Text(
+                        text = "የክፍያ አርዕስት፦ $currentTitle",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF2E7D32)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+
                     Row(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
@@ -342,13 +437,16 @@ fun PaymentScreen(
 
                     Button(
                         onClick = {
-                            val notes = when (selectedCategory) {
-                                "የአፈር ማዳበሪያ" -> "$npsbBags ኩንታል NPSB + $ureaBags ኩንታል ዩሪያ"
-                                "የመሬት ግብር" -> "የ ${profile?.fullName ?: "አርሶ አደር"} ዓመታዊ የመሬት ግብር"
-                                else -> "የተሻሻለ ምርጥ ዘር ጥቅል"
+                            val notes = when (selectedCategoryKey) {
+                                "FERTILIZER" -> "$npsbBags ኩንታል NPSB + $ureaBags ኩንታል ዩሪያ"
+                                "LAND_TAX" -> "የ ${profile?.fullName ?: "አርሶ አደር"} ዓመታዊ የመሬት ግብር"
+                                "SEED" -> "የተሻሻለ ምርጥ ዘር ጥቅል"
+                                "LAND_TITLING" -> "የይዞታ ደብተር ምዝገባ ክፍያ"
+                                else -> "የቀበሌ መስኖ ውሃ አገልግሎት"
                             }
                             onProcessPayment(
-                                selectedCategory,
+                                currentTitle,
+                                selectedCategoryKey,
                                 totalAmount,
                                 selectedProvider,
                                 phoneInput,
@@ -368,20 +466,20 @@ fun PaymentScreen(
                         Icon(imageVector = Icons.Default.Lock, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "በ $selectedProvider አሁን ይክፈሉ",
+                            text = "በ $selectedProvider አሁን ይክፈሉና ደረሰኝ ያግኙ",
                             fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
+                            fontSize = 15.sp
                         )
                     }
                 }
             }
         }
 
-        // Past Payments History
+        // Section Title: የተሰጡ ህጋዊ ደረሰኞች
         item {
             Text(
-                text = "የቀደሙ የክፍያ ደረሰኞች",
-                fontSize = 16.sp,
+                text = "የተሰጡ ህጋዊ ዲጂታል ደረሰኞች (ደረሰኙን ለማየት ይጫኑ)",
+                fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -401,7 +499,9 @@ fun PaymentScreen(
                     shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onViewReceipt(payment) }
                 ) {
                     Row(
                         modifier = Modifier
@@ -410,7 +510,7 @@ fun PaymentScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                             Box(
                                 modifier = Modifier
                                     .size(36.dp)
@@ -427,24 +527,33 @@ fun PaymentScreen(
                             Spacer(modifier = Modifier.width(10.dp))
                             Column {
                                 Text(
-                                    text = payment.paymentType,
+                                    text = payment.paymentTitle,
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 13.sp
                                 )
                                 Text(
-                                    text = "መለያ፦ ${payment.referenceId} | ${payment.provider}",
+                                    text = "ደረሰኝ፦ ${payment.receiptOfficialNumber} | ${payment.provider}",
                                     fontSize = 11.sp,
-                                    color = Color.Gray
+                                    color = Color.DarkGray
                                 )
                             }
                         }
 
-                        Text(
-                            text = "${"%,.0f".format(payment.amountBirr)} ብር",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                text = "${"%,.0f".format(payment.amountBirr)} ብር",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "ደረሰኝ እይ →",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF1B5E20)
+                            )
+                        }
                     }
                 }
             }

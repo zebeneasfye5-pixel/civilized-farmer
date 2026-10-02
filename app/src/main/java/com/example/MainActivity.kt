@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocalShipping
@@ -37,6 +38,7 @@ import com.example.ui.components.AudioGuideDialog
 import com.example.ui.components.ReceiptDialog
 import com.example.ui.screens.GpsTrackingScreen
 import com.example.ui.screens.HomeScreen
+import com.example.ui.screens.LandAdminOfficeScreen
 import com.example.ui.screens.LandCalculatorScreen
 import com.example.ui.screens.MarketplaceScreen
 import com.example.ui.screens.OnboardingProfileScreen
@@ -62,10 +64,13 @@ class MainActivity : ComponentActivity() {
 fun ArsoAderApp(viewModel: ArsoAderViewModel = viewModel()) {
     val currentScreen by viewModel.currentScreen.collectAsStateWithLifecycle()
     val farmerProfile by viewModel.farmerProfile.collectAsStateWithLifecycle()
+    val allFarmerProfiles by viewModel.allFarmerProfiles.collectAsStateWithLifecycle()
     val activeToken by viewModel.activeToken.collectAsStateWithLifecycle()
     val payments by viewModel.payments.collectAsStateWithLifecycle()
+    val expenses by viewModel.expenses.collectAsStateWithLifecycle()
     val crops by viewModel.crops.collectAsStateWithLifecycle()
     val shipmentState by viewModel.shipmentState.collectAsStateWithLifecycle()
+    val kebeleStatistics by viewModel.kebeleStatistics.collectAsStateWithLifecycle()
     val isOffline by viewModel.isOfflineSimulated.collectAsStateWithLifecycle()
     val voiceGuideMessage by viewModel.voiceGuideMessage.collectAsStateWithLifecycle()
     val recentReceipt by viewModel.recentReceipt.collectAsStateWithLifecycle()
@@ -96,9 +101,10 @@ fun ArsoAderApp(viewModel: ArsoAderViewModel = viewModel()) {
                 onVoiceGuideClick = {
                     val defaultMsg = when (currentScreen) {
                         ArsoScreen.HOME -> "እንኳን ወደ አርሶ አደር መተግበሪያ በደህና መጡ! ማዳበሪያ ለመውሰድ፣ ክፍያ ለመክፈል ወይም ሰብል ለመሸጥ ከታች ያሉትን ቁልፎች ይጫኑ።"
-                        ArsoScreen.PROFILE -> "እዚህ ገፅ ላይ ሙሉ ስምዎን፣ መታወቂያዎንና የመሬትዎን ልክ ያስመዝግቡ። መረጃው አንዴ ከተሞላ በስልክዎ ውስጥ ይቀመጣል።"
+                        ArsoScreen.PROFILE -> "እዚህ ማህደር ላይ ፎቶዎን፣ ጾታዎን፣ ስምዎን፣ አድራሻዎን፣ የባንክ አካውንትዎን እና የመሬትዎን ልክ ያስመዝግቡ።"
+                        ArsoScreen.LAND_ADMIN_OFFICE -> "ይህ የቀበሌ ግብርና እና መሬት አስተዳደር ጽ/ቤት ዳሽቦርድ ነው። የተመዘገቡ አርሶ አደሮች ብዛት፣ የሴትና ወንድ ስሌት፣ የተሰበሰበ ገቢ እና የተፈፀመ ወጪ እዚህ ይታያል።"
                         ArsoScreen.QUEUE_TOKEN -> "የማዳበሪያ መውሰጃ ተራ ቁጥርዎ እና የቀበሌ መጋዘን መረጃው እዚህ ይገኛል።"
-                        ArsoScreen.PAYMENT -> "የማዳበሪያ፣ የመሬት ግብር ወይም የምርጥ ዘር ክፍያዎን በቴሌብር ወይም በሲቢኢ ብር ከቤትዎ ሆነው መክፈል ይችላሉ።"
+                        ArsoScreen.PAYMENT -> "የማዳበሪያ፣ የመሬት ግብር፣ የምርጥ ዘር ወይም የመስኖ ክፍያዎን በሞባይል ከቤትዎ ሆነው ይክፈሉ፤ ህጋዊ ደረሰኝ ወዲያው ይሰጥዎታል።"
                         ArsoScreen.LAND_CALCULATOR -> "የመሬትዎን ስፋት በሄክታር ወይም በጥማድ በማስገባት የሚያስፈልገዎትን የማዳበሪያ መጠን ያሰሉ።"
                         ArsoScreen.GPS_TRACKING -> "የማዳበሪያ ጭነቱ ከጅቡቲ ወደብ ተነስቶ ወደ ቀበሌዎ መጋዘን የደረሰበትን መንገድ በጂፒኤስ ይከታተሉ።"
                         ArsoScreen.MARKETPLACE -> "ያመረቱትን ሰብል ያለ ምንም ደላላ በቀጥታ ለሸማቾች ለመሸጥ እዚህ ይመዝገቡ።"
@@ -116,37 +122,37 @@ fun ArsoAderApp(viewModel: ArsoAderViewModel = viewModel()) {
                     selected = currentScreen == ArsoScreen.HOME,
                     onClick = { viewModel.navigateTo(ArsoScreen.HOME) },
                     icon = { Icon(Icons.Default.Home, contentDescription = "መነሻ") },
-                    label = { Text("መነሻ", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) }
+                    label = { Text("መነሻ", fontSize = 10.sp, fontWeight = FontWeight.SemiBold) }
+                )
+                NavigationBarItem(
+                    selected = currentScreen == ArsoScreen.LAND_ADMIN_OFFICE,
+                    onClick = { viewModel.navigateTo(ArsoScreen.LAND_ADMIN_OFFICE) },
+                    icon = { Icon(Icons.Default.AccountBalance, contentDescription = "ጽ/ቤት") },
+                    label = { Text("ጽ/ቤት", fontSize = 10.sp, fontWeight = FontWeight.SemiBold) }
                 )
                 NavigationBarItem(
                     selected = currentScreen == ArsoScreen.QUEUE_TOKEN,
                     onClick = { viewModel.navigateTo(ArsoScreen.QUEUE_TOKEN) },
                     icon = { Icon(Icons.Default.Assignment, contentDescription = "ተራዬ") },
-                    label = { Text("ተራዬ", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) }
+                    label = { Text("ተራዬ", fontSize = 10.sp, fontWeight = FontWeight.SemiBold) }
                 )
                 NavigationBarItem(
                     selected = currentScreen == ArsoScreen.PAYMENT,
                     onClick = { viewModel.navigateTo(ArsoScreen.PAYMENT) },
                     icon = { Icon(Icons.Default.Payment, contentDescription = "ክፍያ") },
-                    label = { Text("ክፍያ", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) }
+                    label = { Text("ክፍያ", fontSize = 10.sp, fontWeight = FontWeight.SemiBold) }
                 )
                 NavigationBarItem(
                     selected = currentScreen == ArsoScreen.GPS_TRACKING,
                     onClick = { viewModel.navigateTo(ArsoScreen.GPS_TRACKING) },
                     icon = { Icon(Icons.Default.LocalShipping, contentDescription = "ጂፒኤስ") },
-                    label = { Text("ጂፒኤስ", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) }
-                )
-                NavigationBarItem(
-                    selected = currentScreen == ArsoScreen.MARKETPLACE,
-                    onClick = { viewModel.navigateTo(ArsoScreen.MARKETPLACE) },
-                    icon = { Icon(Icons.Default.Storefront, contentDescription = "ገበያ") },
-                    label = { Text("ገበያ", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) }
+                    label = { Text("ጂፒኤስ", fontSize = 10.sp, fontWeight = FontWeight.SemiBold) }
                 )
                 NavigationBarItem(
                     selected = currentScreen == ArsoScreen.PROFILE,
                     onClick = { viewModel.navigateTo(ArsoScreen.PROFILE) },
-                    icon = { Icon(Icons.Default.Person, contentDescription = "መገለጫ") },
-                    label = { Text("መገለጫ", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) }
+                    icon = { Icon(Icons.Default.Person, contentDescription = "ማህደር") },
+                    label = { Text("ማህደር", fontSize = 10.sp, fontWeight = FontWeight.SemiBold) }
                 )
             }
         },
@@ -165,11 +171,40 @@ fun ArsoAderApp(viewModel: ArsoAderViewModel = viewModel()) {
                     onNavigate = { viewModel.navigateTo(it) },
                     onVoiceClick = { viewModel.showVoiceGuide(it) }
                 )
+                ArsoScreen.LAND_ADMIN_OFFICE -> LandAdminOfficeScreen(
+                    statistics = kebeleStatistics,
+                    farmers = allFarmerProfiles,
+                    payments = payments,
+                    expenses = expenses,
+                    onRecordExpense = { title, category, amount, kebele, paidTo, notes ->
+                        viewModel.recordOfficeExpense(title, category, amount, kebele, paidTo, notes)
+                    },
+                    onViewReceipt = { viewModel.showReceipt(it) },
+                    onVoiceClick = { viewModel.showVoiceGuide(it) }
+                )
                 ArsoScreen.PROFILE -> OnboardingProfileScreen(
                     currentProfile = farmerProfile,
-                    onSaveProfile = { fullName, phone, nationality, region, zone, woreda, kebele, nationalId, kebeleId, landHectares, landTimad, taxBirr, primaryCrops ->
+                    onSaveProfile = { fullName, phone, gender, nationality, region, zone, woreda, kebele, nationalId, kebeleId, landHectares, landTimad, taxBirr, primaryCrops, bankName, bankAccountNumber, bankAccountHolder, avatarPreset, photoUri ->
                         viewModel.saveFarmerProfile(
-                            fullName, phone, nationality, region, zone, woreda, kebele, nationalId, kebeleId, landHectares, landTimad, taxBirr, primaryCrops
+                            fullName = fullName,
+                            phoneNumber = phone,
+                            gender = gender,
+                            nationality = nationality,
+                            region = region,
+                            zone = zone,
+                            woreda = woreda,
+                            kebele = kebele,
+                            nationalId = nationalId,
+                            kebeleId = kebeleId,
+                            landSizeHectares = landHectares,
+                            landSizeTimad = landTimad,
+                            annualTaxBirr = taxBirr,
+                            primaryCrops = primaryCrops,
+                            bankName = bankName,
+                            bankAccountNumber = bankAccountNumber,
+                            bankAccountHolder = bankAccountHolder,
+                            avatarPreset = avatarPreset,
+                            photoUri = photoUri
                         )
                     },
                     onVoiceClick = { viewModel.showVoiceGuide(it) }
@@ -186,9 +221,22 @@ fun ArsoAderApp(viewModel: ArsoAderViewModel = viewModel()) {
                 ArsoScreen.PAYMENT -> PaymentScreen(
                     profile = farmerProfile,
                     pastPayments = payments,
-                    onProcessPayment = { type, amount, provider, phone, notes ->
-                        viewModel.processPayment(type, amount, provider, phone, notes)
+                    onProcessPayment = { title, categoryKey, amount, provider, phone, notes ->
+                        val farmerName = farmerProfile?.fullName ?: "አበበ ታደሰ"
+                        val kebele = farmerProfile?.kebele ?: "አዴት 01 ቀበሌ"
+                        viewModel.processPayment(
+                            paymentTitle = title,
+                            categoryKey = categoryKey,
+                            amount = amount,
+                            provider = provider,
+                            phone = phone,
+                            farmerId = farmerProfile?.id ?: "primary_farmer",
+                            farmerName = farmerName,
+                            kebele = kebele,
+                            notes = notes
+                        )
                     },
+                    onViewReceipt = { viewModel.showReceipt(it) },
                     onVoiceClick = { viewModel.showVoiceGuide(it) }
                 )
                 ArsoScreen.LAND_CALCULATOR -> LandCalculatorScreen(
@@ -197,19 +245,25 @@ fun ArsoAderApp(viewModel: ArsoAderViewModel = viewModel()) {
                         val current = farmerProfile
                         if (current != null) {
                             viewModel.saveFarmerProfile(
-                                current.fullName,
-                                current.phoneNumber,
-                                current.nationality,
-                                current.region,
-                                current.zone,
-                                current.woreda,
-                                current.kebele,
-                                current.nationalId,
-                                current.kebeleId,
-                                hectares,
-                                timad,
-                                current.annualTaxBirr,
-                                current.primaryCrops
+                                fullName = current.fullName,
+                                phoneNumber = current.phoneNumber,
+                                gender = current.gender,
+                                nationality = current.nationality,
+                                region = current.region,
+                                zone = current.zone,
+                                woreda = current.woreda,
+                                kebele = current.kebele,
+                                nationalId = current.nationalId,
+                                kebeleId = current.kebeleId,
+                                landSizeHectares = hectares,
+                                landSizeTimad = timad,
+                                annualTaxBirr = current.annualTaxBirr,
+                                primaryCrops = current.primaryCrops,
+                                bankName = current.bankName,
+                                bankAccountNumber = current.bankAccountNumber,
+                                bankAccountHolder = current.bankAccountHolder,
+                                avatarPreset = current.avatarPreset,
+                                photoUri = current.photoUri
                             )
                         }
                     },

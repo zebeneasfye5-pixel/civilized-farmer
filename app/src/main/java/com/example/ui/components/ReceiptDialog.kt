@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Print
+import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -78,7 +80,7 @@ fun ReceiptDialog(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "ዲጂታል የክፍያ ደረሰኝ",
+                        text = "ህጋዊ ዲጂታል ደረሰኝ",
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
                     )
@@ -99,24 +101,31 @@ fun ReceiptDialog(
                         .padding(14.dp)
                 ) {
                     Column {
-                        // Stamp Header
+                        // Official Stamp Header
                         Row(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(
-                                text = "የግብርና ሚኒስቴር ማረጋገጫ",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                            Column {
+                                Text(
+                                    text = "የቀበሌ ግብርና እና መሬት አስተዳደር ጽ/ቤት",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = "ህጋዊ የክፍያ ማረጋገጫ ደረሰኝ",
+                                    fontSize = 10.sp,
+                                    color = Color.Gray
+                                )
+                            }
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
                                 color = Color(0xFFE8F5E9)
                             ) {
                                 Text(
-                                    text = "የተረጋገጠ",
+                                    text = "የተረጋገጠ ✓",
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF2E7D32),
@@ -126,18 +135,21 @@ fun ReceiptDialog(
                         }
 
                         HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 10.dp),
+                            modifier = Modifier.padding(vertical = 8.dp),
                             color = Color(0xFFE0E0E0)
                         )
 
-                        ReceiptRow(label = "የክፍያ መለያ (Txn ID):", value = record.referenceId)
-                        ReceiptRow(label = "የክፍያ ዓይነት:", value = record.paymentType)
-                        ReceiptRow(label = "የከፋይ ስልክ:", value = record.payerPhone)
+                        ReceiptRow(label = "ህጋዊ የደረሰኝ ቁጥር:", value = record.receiptOfficialNumber)
+                        ReceiptRow(label = "የግብይት መለያ (Txn ID):", value = record.referenceId)
+                        ReceiptRow(label = "የከፋይ አርሶ አደር ስም:", value = record.farmerName.ifEmpty { "ክቡር አርሶ አደር" })
+                        ReceiptRow(label = "ቀበሌ / አስተዳደር:", value = record.kebele)
+                        ReceiptRow(label = "የክፍያ አርዕስት:", value = record.paymentTitle)
                         ReceiptRow(label = "የከፈሉበት ዘዴ:", value = record.provider)
+                        ReceiptRow(label = "የከፋይ ስልክ:", value = record.payerPhone)
                         ReceiptRow(label = "ቀንና ሰዓት:", value = dateStr)
 
                         HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 10.dp),
+                            modifier = Modifier.padding(vertical = 8.dp),
                             color = Color(0xFFE0E0E0)
                         )
 
@@ -149,7 +161,7 @@ fun ReceiptDialog(
                             Text(
                                 text = "ጠቅላላ የተከፈለ፡",
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 15.sp
+                                fontSize = 14.sp
                             )
                             Text(
                                 text = "${"%,.2f".format(record.amountBirr)} ብር",
@@ -160,24 +172,44 @@ fun ReceiptDialog(
                         }
 
                         if (record.receiptNotes.isNotEmpty()) {
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = "ማስታወሻ፦ ${record.receiptNotes}",
-                                fontSize = 12.sp,
+                                fontSize = 11.sp,
                                 color = Color.Gray
                             )
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = "💡 ይህ ደረሰኝ በስልኮ ውስጥ ከመስመር ውጭ (Offline) ተቀምጧል። ማዳበሪያውን በመጋዘን ሲወስዱ ለባለሙያው ያሳዩ።",
-                    fontSize = 12.sp,
-                    lineHeight = 17.sp,
-                    color = Color(0xFF555555),
-                    textAlign = TextAlign.Center
-                )
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Stamp Box
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color(0xFFF1F8E9),
+                    border = BorderStroke(1.dp, Color(0xFFA5D6A7)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ReceiptLong,
+                            contentDescription = null,
+                            tint = Color(0xFF2E7D32),
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "ይህ ደረሰኝ በሲስተሙ በራሱ የተረጋገጠ ህጋዊ ሰነድ ነው። በስልኮ ውስጥ ከመስመር ውጭ (Offline) ተቀምጧል።",
+                            fontSize = 10.sp,
+                            lineHeight = 14.sp,
+                            color = Color(0xFF1B5E20)
+                        )
+                    }
+                }
             }
         },
         confirmButton = {
@@ -191,7 +223,7 @@ fun ReceiptDialog(
                     .fillMaxWidth()
                     .testTag("receipt_close_button")
             ) {
-                Text("ደረሰኙን አስቀምጥ (ተረዳሁ)", fontWeight = FontWeight.Bold)
+                Text("ደረሰኙን በማህደር አስቀምጥ", fontWeight = FontWeight.Bold)
             }
         }
     )
@@ -203,12 +235,12 @@ private fun ReceiptRow(label: String, value: String) {
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 3.dp)
+            .padding(vertical = 2.dp)
     ) {
-        Text(text = label, fontSize = 13.sp, color = Color.Gray)
+        Text(text = label, fontSize = 12.sp, color = Color.Gray)
         Text(
             text = value,
-            fontSize = 13.sp,
+            fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
             color = Color(0xFF222222)
         )
