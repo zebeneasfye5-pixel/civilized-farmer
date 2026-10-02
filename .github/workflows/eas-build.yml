@@ -20,6 +20,9 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Accept Android SDK Licenses
+        run: yes | sdkmanager --licenses
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
