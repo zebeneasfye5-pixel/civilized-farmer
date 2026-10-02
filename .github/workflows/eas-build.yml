@@ -1,4 +1,4 @@
-     name: EAS Build
+name: EAS Build
 on:
   push:
     branches:
@@ -10,6 +10,15 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
