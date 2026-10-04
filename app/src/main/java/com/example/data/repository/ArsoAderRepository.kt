@@ -1,10 +1,14 @@
 package com.example.data.repository
 
 import com.example.data.local.FarmerDao
+import com.example.data.model.AgriculturalInputItem
+import com.example.data.model.CreatorEarningsSummary
+import com.example.data.model.CreatorPayoutRecord
 import com.example.data.model.ExpenseRecord
 import com.example.data.model.FarmerProfile
 import com.example.data.model.FertilizerQueueToken
 import com.example.data.model.FertilizerShipment
+import com.example.data.model.InputOrderItem
 import com.example.data.model.MarketCropItem
 import com.example.data.model.PaymentRecord
 import com.example.data.model.ShipmentCheckpoint
@@ -21,9 +25,83 @@ class ArsoAderRepository(private val dao: FarmerDao) {
     val allPayments: Flow<List<PaymentRecord>> = dao.getAllPayments()
     val allExpenses: Flow<List<ExpenseRecord>> = dao.getAllExpenses()
     val allCrops: Flow<List<MarketCropItem>> = dao.getAllCrops()
+    val allInputs: Flow<List<AgriculturalInputItem>> = dao.getAllInputs()
+    val allInputOrders: Flow<List<InputOrderItem>> = dao.getAllInputOrders()
+
+    // Secret Creator Monetization Flows (Hidden from regular users)
+    val creatorEarnings: Flow<CreatorEarningsSummary?> = dao.getCreatorEarnings()
+    val allCreatorPayouts: Flow<List<CreatorPayoutRecord>> = dao.getAllCreatorPayouts()
+
+    suspend fun recordRegistrationEarning() {
+        val current = dao.getCreatorEarningsSync() ?: CreatorEarningsSummary()
+        val updated = current.copy(
+            totalRegistrations = current.totalRegistrations + 1,
+            availableBalanceBirr = current.availableBalanceBirr + current.regCommissionRateBirr,
+            lastUpdated = System.currentTimeMillis()
+        )
+        dao.insertOrUpdateEarnings(updated)
+    }
+
+    suspend fun recordShareEarning() {
+        val current = dao.getCreatorEarningsSync() ?: CreatorEarningsSummary()
+        val updated = current.copy(
+            totalShares = current.totalShares + 1,
+            availableBalanceBirr = current.availableBalanceBirr + current.shareCommissionRateBirr,
+            lastUpdated = System.currentTimeMillis()
+        )
+        dao.insertOrUpdateEarnings(updated)
+    }
+
+    suspend fun recordLikeEarning() {
+        val current = dao.getCreatorEarningsSync() ?: CreatorEarningsSummary()
+        val updated = current.copy(
+            totalLikesAndImpressions = current.totalLikesAndImpressions + 1,
+            availableBalanceBirr = current.availableBalanceBirr + current.likeCommissionRateBirr,
+            lastUpdated = System.currentTimeMillis()
+        )
+        dao.insertOrUpdateEarnings(updated)
+    }
+
+    suspend fun updateCreatorPayoutDetails(method: String, accountNumber: String, accountName: String) {
+        val current = dao.getCreatorEarningsSync() ?: CreatorEarningsSummary()
+        val updated = current.copy(
+            payoutMethod = method,
+            payoutAccountNumber = accountNumber,
+            payoutAccountName = accountName,
+            lastUpdated = System.currentTimeMillis()
+        )
+        dao.insertOrUpdateEarnings(updated)
+    }
+
+    suspend fun processCreatorPayout(amount: Double, method: String, targetAccount: String, recipientName: String): CreatorPayoutRecord {
+        val current = dao.getCreatorEarningsSync() ?: CreatorEarningsSummary()
+        val withdrawAmount = amount.coerceAtMost(current.availableBalanceBirr).coerceAtLeast(10.0)
+        val updated = current.copy(
+            availableBalanceBirr = (current.availableBalanceBirr - withdrawAmount).coerceAtLeast(0.0),
+            totalWithdrawnBirr = current.totalWithdrawnBirr + withdrawAmount,
+            lastUpdated = System.currentTimeMillis()
+        )
+        dao.insertOrUpdateEarnings(updated)
+
+        val txRef = "ET-PAY-${(100000..999999).random()}"
+        val record = CreatorPayoutRecord(
+            payoutId = txRef,
+            amountBirr = withdrawAmount,
+            method = method,
+            targetAccount = targetAccount,
+            recipientName = recipientName,
+            status = "የተከፈለ (Transferred)",
+            referenceNumber = "TX-${(10000000..99999999).random()}",
+            timestamp = System.currentTimeMillis()
+        )
+        dao.insertPayoutRecord(record)
+        return record
+    }
 
     suspend fun saveFarmerProfile(profile: FarmerProfile) {
         dao.insertOrUpdateProfile(profile)
+        // Automatically credit creator with registration commission
+        recordRegistrationEarning()
         val npsbCount = (profile.landSizeHectares * 1.5).toInt().coerceAtLeast(1)
         val ureaCount = (profile.landSizeHectares * 1.5).toInt().coerceAtLeast(1)
         val defaultToken = FertilizerQueueToken(
@@ -135,10 +213,32 @@ class ArsoAderRepository(private val dao: FarmerDao) {
         dao.deleteCrop(crop)
     }
 
+    suspend fun orderInput(
+        inputName: String,
+        category: String,
+        quantity: Int,
+        totalBirr: Double,
+        farmerName: String,
+        farmerPhone: String,
+        pickupDepot: String
+    ): InputOrderItem {
+        val order = InputOrderItem(
+            orderNumber = "ORD-2026-${(1000..9999).random()}",
+            inputName = inputName,
+            category = category,
+            quantity = quantity,
+            totalBirr = totalBirr,
+            farmerName = farmerName,
+            farmerPhone = farmerPhone,
+            pickupDepot = pickupDepot
+        )
+        dao.insertInputOrder(order)
+        return order
+    }
+
     suspend fun seedInitialDataIfEmpty() {
         val currentProfile = dao.getFarmerProfileSync()
         if (currentProfile == null) {
-            // Seed a realistic pool of registered male and female farmers in the Kebele
             val primaryFarmer = FarmerProfile(
                 id = "primary_farmer",
                 fullName = "አበበ ታደሰ ወርቁ",
@@ -294,7 +394,6 @@ class ArsoAderRepository(private val dao: FarmerDao) {
             )
             dao.insertQueueToken(initialToken)
 
-            // Seed initial income payment records with individual titles
             val payments = listOf(
                 PaymentRecord(
                     referenceId = "TLB-948201",
@@ -377,7 +476,6 @@ class ArsoAderRepository(private val dao: FarmerDao) {
                 dao.insertPayment(payment)
             }
 
-            // Seed initial Kebele expenses (የወጪ መዝገቦች)
             val expenses = listOf(
                 ExpenseRecord(
                     expenseTitle = "ለግብርና ሚኒስቴር የአፈር ማዳበሪያ ግዢ የተላለፈ",
@@ -420,8 +518,10 @@ class ArsoAderRepository(private val dao: FarmerDao) {
             for (expense in expenses) {
                 dao.insertExpense(expense)
             }
+        }
 
-            // Seed direct farmer crops
+        // Ensure marketplace crops are seeded if empty
+        if (dao.getCropsCount() == 0) {
             val crops = listOf(
                 MarketCropItem(
                     cropName = "ማኛ ጤፍ (የመጀመሪያ ደረጃ)",
@@ -459,6 +559,175 @@ class ArsoAderRepository(private val dao: FarmerDao) {
             for (crop in crops) {
                 dao.insertCrop(crop)
             }
+        }
+
+        // Ensure Agricultural Inputs (ምርጥ ዘር፣ ማዳበሪያ እና የግብርና መሳሪያዎች) are seeded if empty
+        if (dao.getInputsCount() == 0) {
+            val inputs = listOf(
+                AgriculturalInputItem(
+                    name = "ማኛ ጤፍ የተሻሻለ ምርጥ ዘር (DZ-Cr-387)",
+                    category = "ምርጥ ዘር",
+                    description = "በሄክታር እስከ 28 ኩንታል ምርት የሚሰጥ፣ ነቀዝንና በሽታን የሚቋቋም የተረጋገጠ ምርጥ ዘር",
+                    priceBirr = 5200.0,
+                    unit = "በኩንታል (100 ኪ.ግ)",
+                    availableStock = 120,
+                    supplierName = "የኢትዮጵያ የግብርና ስራዎች ኮርፖሬሽን",
+                    supplierPhone = "0115512345",
+                    depotLocation = "የአዴት ማዕከላዊ ግብአት መጋዘን"
+                ),
+                AgriculturalInputItem(
+                    name = "የኩክሳ ነጭ ስንዴ ምርጥ ዘር (Kekeba Wheat)",
+                    category = "ምርጥ ዘር",
+                    description = "ዋግ በሽታን የሚቋቋም ከፍተኛ ምርታማነት ያለው የተረጋገጠ የስንዴ ዝርያ",
+                    priceBirr = 4800.0,
+                    unit = "በኩንታል (100 ኪ.ግ)",
+                    availableStock = 95,
+                    supplierName = "የአማራ ምርጥ ዘር ድርጅት",
+                    supplierPhone = "0582201948",
+                    depotLocation = "አዴት 01 ቀበሌ ማከፋፈያ"
+                ),
+                AgriculturalInputItem(
+                    name = "የቦቆሎ ምርጥ ዘር (BH-661 Hybrid Maize)",
+                    category = "ምርጥ ዘር",
+                    description = "በቆላማና ወይናደጋ በፍጥነት የሚደርስ በሄክታር እስከ 80 ኩንታል የሚያስገኝ ድቅል ዝርያ",
+                    priceBirr = 3900.0,
+                    unit = "በጆንያ (50 ኪ.ግ)",
+                    availableStock = 150,
+                    supplierName = "የኢትዮጵያ ግብርና ስራዎች ኮርፖሬሽን",
+                    supplierPhone = "0115512345",
+                    depotLocation = "የአዴት ማዕከላዊ ግብአት መጋዘን"
+                ),
+                AgriculturalInputItem(
+                    name = "NPSB አፈር ማዳበሪያ (NPS + Boron)",
+                    category = "አፈር ማዳበሪያ",
+                    description = "ናይትሮጅን፣ ፎስፈረስ፣ ሰልፈርና ቦሮን ያካተተ ለአፈራችን ተስማሚ ማዳበሪያ",
+                    priceBirr = 4200.0,
+                    unit = "በኩንታል (100 ኪ.ግ)",
+                    availableStock = 450,
+                    supplierName = "የግብርና ሚኒስቴር ማዳበሪያ ማከፋፈያ",
+                    supplierPhone = "0115512345",
+                    depotLocation = "የቀበሌ ህ/ስ/ማህበር መጋዘን"
+                ),
+                AgriculturalInputItem(
+                    name = "ዩሪያ (Urea 46% Nitrogen) ማዳበሪያ",
+                    category = "አፈር ማዳበሪያ",
+                    description = "ለሰብል እድገትና አረንጓዴነት ወሳኝ የሆነ የመጀመሪያ ደረጃ የናይትሮጅን ማዳበሪያ",
+                    priceBirr = 3950.0,
+                    unit = "በኩንታል (100 ኪ.ግ)",
+                    availableStock = 380,
+                    supplierName = "የግብርና ሚኒስቴር ማዳበሪያ ማከፋፈያ",
+                    supplierPhone = "0115512345",
+                    depotLocation = "የቀበሌ ህ/ስ/ማህበር መጋዘን"
+                ),
+                AgriculturalInputItem(
+                    name = "ኦርጋኒክ ባዮ-ማዳበሪያ (Bio-Fertilizer)",
+                    category = "አፈር ማዳበሪያ",
+                    description = "የአፈርን ለምነትና እርጥበት የሚጠብቅ ተፈጥሯዊ ባዮ-ማዳበሪያ",
+                    priceBirr = 1800.0,
+                    unit = "በኩንታል (100 ኪ.ግ)",
+                    availableStock = 80,
+                    supplierName = "የአካባቢ ጥበቃና ግብርና ማህበር",
+                    supplierPhone = "0918765432",
+                    depotLocation = "አዴት 01 ቀበሌ ማከፋፈያ"
+                ),
+                AgriculturalInputItem(
+                    name = "የእጅ ኬሚካልና ፀረ-ተባይ መርጫ (16L Knapsack Sprayer)",
+                    category = "የግብርና መሳሪያዎች",
+                    description = "ጠንካራ ፕላስቲክ፣ ከፍተኛ ጫና የሚፈጥር እጀታና የሚስተካከል አፍንጫ ያለው መርጫ",
+                    priceBirr = 2800.0,
+                    unit = "በፍሬ (1 ማሽን)",
+                    availableStock = 60,
+                    supplierName = "የአግሮ ቴክኖሎጂ መሳሪያዎች አቅራቢ",
+                    supplierPhone = "0911987654",
+                    depotLocation = "የአዴት ማዕከላዊ ግብአት መጋዘን"
+                ),
+                AgriculturalInputItem(
+                    name = "የውሃ መሳቢያ ሞተር ፓምፕ (3 ኢንች ናፍጣ ፓምፕ)",
+                    category = "የግብርና መሳሪያዎች",
+                    description = "ለመስኖ እርሻ ከፍተኛ መጠን ያለው ውሃ ከወንዝ ወይም ከጉድጓድ የሚስብ ኃይለኛ ፓምፕ",
+                    priceBirr = 38500.0,
+                    unit = "በፍሬ (ሙሉ ጥቅል)",
+                    availableStock = 25,
+                    supplierName = "የኢትዮጵያ ግብርና መካናይዜሽን",
+                    supplierPhone = "0115512345",
+                    depotLocation = "ባህር ዳር ማከፋፈያ ማዕከል"
+                ),
+                AgriculturalInputItem(
+                    name = "አነስተኛ የጤፍና ስንዴ ማጨጃ ማሽን (Mini Reaper)",
+                    category = "የግብርና መሳሪያዎች",
+                    description = "በሰዓት እስከ 1 ሄክታር ሰብል የሚያጭድ፣ ጉልበትና ጊዜን የሚቆጥብ ዘመናዊ ማሽን",
+                    priceBirr = 65000.0,
+                    unit = "በፍሬ",
+                    availableStock = 12,
+                    supplierName = "የግብርና መካናይዜሽን ዳይሬክቶሬት",
+                    supplierPhone = "0115512345",
+                    depotLocation = "ባህር ዳር ማከፋፈያ ማዕከል"
+                ),
+                AgriculturalInputItem(
+                    name = "የአርሶ አደር መከላከያ ጓንት፣ ቦት ጫማና ጭምብል",
+                    category = "የግብርና መሳሪያዎች",
+                    description = "ፀረ-ተባይ በሚረጭበትና አረም በሚታረምበት ጊዜ ለአደጋ መከላከያ የሚሆን ሙሉ ጥቅል",
+                    priceBirr = 1400.0,
+                    unit = "በጥቅል (Set)",
+                    availableStock = 200,
+                    supplierName = "የቀበሌ ግብርና ጽ/ቤት",
+                    supplierPhone = "0918123456",
+                    depotLocation = "የቀበሌ ህ/ስ/ማህበር መጋዘን"
+                )
+            )
+
+            for (input in inputs) {
+                dao.insertInput(input)
+            }
+        }
+
+        // Initialize Creator Monetization Summary & Payout history if not yet seeded
+        if (dao.getCreatorEarningsSync() == null) {
+            dao.insertOrUpdateEarnings(
+                CreatorEarningsSummary(
+                    id = "creator_main",
+                    ownerEmail = "zebeneasfye5@gmail.com",
+                    ownerName = "Zebene Asfye",
+                    payoutMethod = "Telebirr",
+                    payoutAccountNumber = "0921458976",
+                    payoutAccountName = "Zebene Asfye",
+                    totalRegistrations = 184,
+                    totalShares = 96,
+                    totalLikesAndImpressions = 1420,
+                    ethioTelecomVasEarnedBirr = 4250.0,
+                    regCommissionRateBirr = 25.0,
+                    shareCommissionRateBirr = 5.0,
+                    likeCommissionRateBirr = 1.0,
+                    availableBalanceBirr = 9850.0,
+                    totalWithdrawnBirr = 6500.0
+                )
+            )
+
+            dao.insertPayoutRecord(
+                CreatorPayoutRecord(
+                    payoutId = "ET-PAY-49120",
+                    amountBirr = 4000.0,
+                    method = "Telebirr (ቴሌብር)",
+                    targetAccount = "0921458976",
+                    recipientName = "Zebene Asfye",
+                    status = "የተከፈለ (Transferred)",
+                    referenceNumber = "TX-99824102",
+                    timestamp = System.currentTimeMillis() - 86400000L * 3
+                )
+            )
+
+            dao.insertPayoutRecord(
+                CreatorPayoutRecord(
+                    payoutId = "ET-PAY-38291",
+                    amountBirr = 2500.0,
+                    method = "የኢትዮጵያ ንግድ ባንክ (CBE)",
+                    targetAccount = "1000284910294",
+                    recipientName = "Zebene Asfye",
+                    status = "የተከፈለ (Transferred)",
+                    referenceNumber = "TX-88291044",
+                    timestamp = System.currentTimeMillis() - 86400000L * 7
+                )
+            )
         }
     }
 

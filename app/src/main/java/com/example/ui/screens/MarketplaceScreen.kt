@@ -1,5 +1,7 @@
 package com.example.ui.screens
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,8 +26,11 @@ import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Grass
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.PriceChange
+import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.filled.VolumeUp
@@ -53,6 +58,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -68,6 +74,7 @@ fun MarketplaceScreen(
     onAddCrop: (cropName: String, sellerName: String, sellerPhone: String, location: String, quantity: Double, price: Double) -> Unit,
     onVoiceClick: (String) -> Unit
 ) {
+    val context = LocalContext.current
     var showAddDialog by remember { mutableStateOf(false) }
     var selectedFilter by remember { mutableStateOf("ሁሉም") }
 
@@ -91,7 +98,7 @@ fun MarketplaceScreen(
                 ) {
                     Icon(imageVector = Icons.Default.Add, contentDescription = null)
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text(text = "ምርትዎን ይሽጡ", fontWeight = FontWeight.Bold)
+                    Text(text = "ምርትዎን ይሽጡ (ይመዝግቡ)", fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -124,7 +131,7 @@ fun MarketplaceScreen(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(36.dp)
+                                    .size(38.dp)
                                     .background(Color(0xFFF57F17), CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -132,7 +139,7 @@ fun MarketplaceScreen(
                                     imageVector = Icons.Default.Storefront,
                                     contentDescription = null,
                                     tint = Color.White,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(22.dp)
                                 )
                             }
                             Spacer(modifier = Modifier.width(10.dp))
@@ -144,7 +151,7 @@ fun MarketplaceScreen(
                                     color = Color(0xFFE65100)
                                 )
                                 Text(
-                                    text = "ምርትዎን በቀጥታ ለሸማቾችና ነጋዴዎች ያለ ኮሚሽን ይሽጡ",
+                                    text = "አርሶ አደሮች ምርታቸውን በቀጥታ ለሸማቾች የሚሸጡበት",
                                     fontSize = 11.sp,
                                     color = Color(0xFF7E3800)
                                 )
@@ -154,7 +161,7 @@ fun MarketplaceScreen(
                         IconButton(
                             onClick = {
                                 onVoiceClick(
-                                    "ይህ ገበያ ያለ ምንም ደላላ አርሶ አደሩን እና ተጠቃሚውን በቀጥታ የሚያገናኝ ነው። ያመረቱትን ጤፍ፣ ስንዴ ወይም በቆሎ 'ምርትዎን ይሽጡ' የሚለውን ቁልፍ ተጭነው መመዝገብ ይችላሉ።"
+                                    "ይህ ገበያ ያለ ምንም ደላላ አርሶ አደሩን እና ተጠቃሚውን በቀጥታ የሚያገናኝ ነው። ያመረቱትን ጤፍ፣ ስንዴ ወይም በቆሎ 'ምርትዎን ይሽጡ' የሚለውን ቁልፍ ተጭነው መመዝገብ ይችላሉ። ገዢዎች በቀጥታ ስልክዎን በመደወል ይደራደራሉ።"
                                 )
                             }
                         ) {
@@ -248,7 +255,7 @@ fun MarketplaceScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                                     Box(
                                         modifier = Modifier
                                             .size(38.dp)
@@ -319,18 +326,23 @@ fun MarketplaceScreen(
                                     }
                                 }
 
-                                Button(
-                                    onClick = {
-                                        onVoiceClick("የ ${crop.sellerName} ስልክ ቁጥር ${crop.sellerPhone} ነው። አሁን በመደወል ያለምንም ደላላ በቀጥታ መደራደር ይችላሉ።")
-                                    },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.primary
-                                    ),
-                                    shape = RoundedCornerShape(10.dp)
-                                ) {
-                                    Icon(Icons.Default.Call, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("ቀጥታ ይደውሉ", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    // Direct Call Button (ይደውሉ)
+                                    Button(
+                                        onClick = {
+                                            val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${crop.sellerPhone}"))
+                                            context.startActivity(dialIntent)
+                                        },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.primary
+                                        ),
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier.testTag("call_farmer_button_${crop.id}")
+                                    ) {
+                                        Icon(Icons.Default.Call, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("በቀጥታ ደውል", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    }
                                 }
                             }
                         }
@@ -340,7 +352,7 @@ fun MarketplaceScreen(
         }
     }
 
-    // Add Crop Dialog
+    // Add Crop Dialog: አርሶ አደሩ የምርቱን ስም፣ ዋጋ፣ መጠን፣ ስልክ ቁጥር እና የሚገኝበትን ቦታ የሚሞላበት
     if (showAddDialog) {
         var cropName by remember { mutableStateOf("ማኛ ጤፍ (የመጀመሪያ ደረጃ)") }
         var quantityStr by remember { mutableStateOf("15") }
@@ -360,7 +372,7 @@ fun MarketplaceScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "የሰብል ምርትዎን ለገበያ ያቅርቡ",
+                        text = "የሰብል ምርትዎን ያለ ደላላ ይሽጡ",
                         fontWeight = FontWeight.Bold,
                         fontSize = 17.sp
                     )
@@ -377,8 +389,11 @@ fun MarketplaceScreen(
                     OutlinedTextField(
                         value = cropName,
                         onValueChange = { cropName = it },
-                        label = { Text("የሰብል ዓይነት (ለምሳሌ፦ ማኛ ጤፍ)") },
-                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("1. የምርቱ ስም (ለምሳሌ፦ ማኛ ጤፍ)") },
+                        leadingIcon = { Icon(Icons.Default.Grass, contentDescription = null) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("input_crop_name"),
                         shape = RoundedCornerShape(10.dp),
                         singleLine = true
                     )
@@ -387,9 +402,12 @@ fun MarketplaceScreen(
                         OutlinedTextField(
                             value = quantityStr,
                             onValueChange = { quantityStr = it },
-                            label = { Text("መጠን (ኩንታል)") },
+                            label = { Text("2. መጠን (ኩንታል)") },
+                            leadingIcon = { Icon(Icons.Default.Scale, contentDescription = null) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("input_crop_quantity"),
                             shape = RoundedCornerShape(10.dp),
                             singleLine = true
                         )
@@ -397,29 +415,38 @@ fun MarketplaceScreen(
                         OutlinedTextField(
                             value = priceStr,
                             onValueChange = { priceStr = it },
-                            label = { Text("ዋጋ በኩንታል (ብር)") },
+                            label = { Text("3. ዋጋ በኩንታል (ብር)") },
+                            leadingIcon = { Icon(Icons.Default.PriceChange, contentDescription = null) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("input_crop_price"),
                             shape = RoundedCornerShape(10.dp),
                             singleLine = true
                         )
                     }
 
                     OutlinedTextField(
-                        value = location,
-                        onValueChange = { location = it },
-                        label = { Text("የመጋዘን / የቀበሌ አድራሻ") },
-                        modifier = Modifier.fillMaxWidth(),
+                        value = sellerPhone,
+                        onValueChange = { sellerPhone = it },
+                        label = { Text("4. ስልክ ቁጥር (ገዢዎች የሚደውሉበት)") },
+                        leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("input_crop_phone"),
                         shape = RoundedCornerShape(10.dp),
                         singleLine = true
                     )
 
                     OutlinedTextField(
-                        value = sellerPhone,
-                        onValueChange = { sellerPhone = it },
-                        label = { Text("የእርስዎ ስልክ ቁጥር") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                        modifier = Modifier.fillMaxWidth(),
+                        value = location,
+                        onValueChange = { location = it },
+                        label = { Text("5. የሚገኝበት ቦታ (ቀበሌ/ወረዳ)") },
+                        leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("input_crop_location"),
                         shape = RoundedCornerShape(10.dp),
                         singleLine = true
                     )

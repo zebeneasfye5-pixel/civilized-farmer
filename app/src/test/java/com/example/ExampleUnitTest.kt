@@ -38,4 +38,35 @@ class ExampleUnitTest {
 
         assertEquals(4750.0, netBalance, 0.01)
     }
+
+    @Test
+    fun testMultilingualTranslations() {
+        val amharic = com.example.ui.locale.AppStrings.get(com.example.ui.locale.AppLanguage.AMHARIC)
+        assertEquals("አርሶ አደር", amharic.appTitle)
+        assertEquals("መነሻ", amharic.navHome)
+
+        val oromo = com.example.ui.locale.AppStrings.get(com.example.ui.locale.AppLanguage.OROMO)
+        assertEquals("Qonnaan Bulaa", oromo.appTitle)
+        assertEquals("Fuula Duraa", oromo.navHome)
+
+        val tigrinya = com.example.ui.locale.AppStrings.get(com.example.ui.locale.AppLanguage.TIGRINYA)
+        assertEquals("ሓረስታይ", tigrinya.appTitle)
+        assertEquals("መበገሲ", tigrinya.navHome)
+
+        val somali = com.example.ui.locale.AppStrings.get(com.example.ui.locale.AppLanguage.SOMALI)
+        assertEquals("Beeraley", somali.appTitle)
+        assertEquals("Bogga Hore", somali.navHome)
+
+        val sidama = com.example.ui.locale.AppStrings.get(com.example.ui.locale.AppLanguage.SIDAMA)
+        assertEquals("Kalaasicho", sidama.appTitle)
+        assertEquals("Hanafo", sidama.navHome)
+
+        val wolaytta = com.example.ui.locale.AppStrings.get(com.example.ui.locale.AppLanguage.WOLAYTTA)
+        assertEquals("Goshshanchcha", wolaytta.appTitle)
+        assertEquals("Doomiyuwaa", wolaytta.navHome)
+
+        val english = com.example.ui.locale.AppStrings.get(com.example.ui.locale.AppLanguage.ENGLISH)
+        assertEquals("Farmer Hub", english.appTitle)
+        assertEquals("Home", english.navHome)
+    }
 }

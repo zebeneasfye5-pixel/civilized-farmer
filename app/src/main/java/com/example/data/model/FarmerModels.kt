@@ -32,8 +32,8 @@ data class FarmerProfile(
     val bankAccountHolder: String = "",
 
     // Profile Photo in Dossier (ፎቶ በፕሮፋይል ማህደር)
-    val photoUri: String = "", // Custom photo URI if selected
-    val avatarPreset: String = "man_1", // "man_1", "woman_1", "man_2", "woman_2"
+    val photoUri: String = "",
+    val avatarPreset: String = "man_1",
 
     val isRegistered: Boolean = false,
     val registeredDate: Long = System.currentTimeMillis()
@@ -66,13 +66,13 @@ data class FertilizerQueueToken(
 data class PaymentRecord(
     @PrimaryKey
     val referenceId: String, // e.g. "TLB-7492038"
-    val receiptOfficialNumber: String = "KB-REC-001", // ህጋዊ የደረሰኝ ቁጥር
-    val paymentTitle: String, // "የአፈር ማዳበሪያ (NPSB & ዩሪያ)", "የመሬት ግብር", "የተሻሻለ ምርጥ ዘር", "የይዞታ ማረጋገጫ ካርታ", "የመስኖ ውሃ አገልግሎት"
-    val paymentType: String, // Legacy compatibility
-    val categoryKey: String = "FERTILIZER", // FERTILIZER, LAND_TAX, SEED, LAND_TITLING, IRRIGATION
+    val receiptOfficialNumber: String = "KB-REC-001",
+    val paymentTitle: String,
+    val paymentType: String,
+    val categoryKey: String = "FERTILIZER",
     val amountBirr: Double,
-    val provider: String,    // "Telebirr (ቴሌብር)", "CBE Birr (ሲቢኢ)", "Coopay (ኮኦፕ)", "የባንክ ቀጥታ ዝውውር"
-    val status: String = "የተከፈለ",      // "የተከፈለ", "በመጠባበቅ ላይ"
+    val provider: String,
+    val status: String = "የተከፈለ",
     val payerPhone: String,
     val farmerId: String = "primary_farmer",
     val farmerName: String = "",
@@ -88,12 +88,12 @@ data class PaymentRecord(
 data class ExpenseRecord(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    val expenseTitle: String, // e.g. "ለግብርና ሚኒስቴር የማዳበሪያ ግዢ ክፍያ", "የጭነት ትራንስፖርትና ነዳጅ ወጪ"
-    val category: String,     // "የማዳበሪያ ግዢ", "ትራንስፖርትና ሎጀስቲክስ", "የመጋዘን ኪራይና ጥበቃ", "የመስኖ መሰረተ ልማት"
+    val expenseTitle: String,
+    val category: String,
     val amountBirr: Double,
     val kebele: String = "አዴት 01 ቀበሌ",
-    val paidTo: String,       // ተከፋይ አካል (ለምሳሌ፦ "የኢትዮጵያ ግብርና ስራዎች ኮርፖሬሽን")
-    val voucherNumber: String, // የክፍያ ማዘዣ ቫውቸር ቁጥር e.g. "PV-2026-084"
+    val paidTo: String,
+    val voucherNumber: String,
     val timestamp: Long = System.currentTimeMillis(),
     val notes: String = ""
 )
@@ -113,6 +113,44 @@ data class MarketCropItem(
     val pricePerQuintal: Double,
     val isOrganic: Boolean = true,
     val postDate: Long = System.currentTimeMillis()
+)
+
+/**
+ * Agricultural Input item (ምርጥ ዘር፣ ማዳበሪያ እና የግብርና መሳሪያዎች) available for farmers to order
+ */
+@Entity(tableName = "agricultural_inputs")
+data class AgriculturalInputItem(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val name: String,           // e.g. "ማኛ ጤፍ የተሻሻለ ምርጥ ዘር"
+    val category: String,       // "ምርጥ ዘር", "አፈር ማዳበሪያ", "የግብርና መሳሪያዎች"
+    val description: String,
+    val priceBirr: Double,
+    val unit: String,           // "በኩንታል (100 ኪ.ግ)", "በጆንያ (50 ኪ.ግ)", "በፍሬ"
+    val availableStock: Int,
+    val supplierName: String,   // "የኢትዮጵያ ግብርና ስራዎች ኮርፖሬሽን"
+    val supplierPhone: String,  // "0911234567"
+    val depotLocation: String,  // "የአዴት ማዕከላዊ ግብአት መጋዘን"
+    val isFeatured: Boolean = true
+)
+
+/**
+ * Input order placed by farmer (የግብዓት ትዕዛዝ መዝገብ)
+ */
+@Entity(tableName = "input_orders")
+data class InputOrderItem(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val orderNumber: String,     // e.g. "ORD-2026-8492"
+    val inputName: String,
+    val category: String,
+    val quantity: Int,
+    val totalBirr: Double,
+    val farmerName: String,
+    val farmerPhone: String,
+    val pickupDepot: String,
+    val orderDate: Long = System.currentTimeMillis(),
+    val status: String = "የተረጋገጠ (ክምችት ተይዟል)"
 )
 
 /**
@@ -160,3 +198,43 @@ data class FertilizerShipment(
     val currentSpeedKmH: Int,
     val checkpoints: List<ShipmentCheckpoint>
 )
+
+/**
+ * Secret Creator / Developer monetization model.
+ * Tracks earnings from user registrations, shares, likes, and telecom VAS partnerships.
+ * Hidden from regular users, accessible only by developer/owner via secret PIN.
+ */
+@Entity(tableName = "creator_earnings")
+data class CreatorEarningsSummary(
+    @PrimaryKey
+    val id: String = "creator_main",
+    val ownerEmail: String = "zebeneasfye5@gmail.com",
+    val ownerName: String = "Zebene Asfye",
+    val payoutMethod: String = "Telebirr", // "Telebirr" or "CBE"
+    val payoutAccountNumber: String = "0921458976", // Telebirr or CBE account
+    val payoutAccountName: String = "Zebene Asfye",
+    val totalRegistrations: Int = 184,
+    val totalShares: Int = 96,
+    val totalLikesAndImpressions: Int = 1420,
+    val ethioTelecomVasEarnedBirr: Double = 4250.0,
+    val regCommissionRateBirr: Double = 25.0,  // 25 ETB per farmer registered
+    val shareCommissionRateBirr: Double = 5.0, // 5 ETB per share/referral
+    val likeCommissionRateBirr: Double = 1.0,   // 1 ETB per like/view
+    val availableBalanceBirr: Double = 9850.0,
+    val totalWithdrawnBirr: Double = 6500.0,
+    val lastUpdated: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "creator_payouts")
+data class CreatorPayoutRecord(
+    @PrimaryKey
+    val payoutId: String,
+    val amountBirr: Double,
+    val method: String, // "Telebirr", "CBE Birr", "CBE Bank"
+    val targetAccount: String,
+    val recipientName: String,
+    val status: String, // "የተከፈለ (Transferred)", "በሂደት ላይ (Processing)"
+    val referenceNumber: String,
+    val timestamp: Long = System.currentTimeMillis()
+)
+

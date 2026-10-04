@@ -5,10 +5,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.Alignment
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.Agriculture
 import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocalShipping
@@ -26,24 +30,32 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ui.components.ArsoTopBar
 import com.example.ui.components.AudioGuideDialog
+import com.example.ui.components.DirectInstallDialog
+import com.example.ui.components.LanguageSelectionDialog
 import com.example.ui.components.ReceiptDialog
+import com.example.ui.locale.AppStrings
 import com.example.ui.screens.GpsTrackingScreen
 import com.example.ui.screens.HomeScreen
+import com.example.ui.screens.InputSupplierScreen
 import com.example.ui.screens.LandAdminOfficeScreen
 import com.example.ui.screens.LandCalculatorScreen
 import com.example.ui.screens.MarketplaceScreen
 import com.example.ui.screens.OnboardingProfileScreen
 import com.example.ui.screens.PaymentScreen
 import com.example.ui.screens.QueueTokenScreen
+import com.example.ui.screens.SystemIntegrationScreen
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.viewmodel.ArsoAderViewModel
 import com.example.ui.viewmodel.ArsoScreen
@@ -63,12 +75,15 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun ArsoAderApp(viewModel: ArsoAderViewModel = viewModel()) {
     val currentScreen by viewModel.currentScreen.collectAsStateWithLifecycle()
+    val currentLanguage by viewModel.selectedLanguage.collectAsStateWithLifecycle()
     val farmerProfile by viewModel.farmerProfile.collectAsStateWithLifecycle()
     val allFarmerProfiles by viewModel.allFarmerProfiles.collectAsStateWithLifecycle()
     val activeToken by viewModel.activeToken.collectAsStateWithLifecycle()
     val payments by viewModel.payments.collectAsStateWithLifecycle()
     val expenses by viewModel.expenses.collectAsStateWithLifecycle()
     val crops by viewModel.crops.collectAsStateWithLifecycle()
+    val inputs by viewModel.inputs.collectAsStateWithLifecycle()
+    val inputOrders by viewModel.inputOrders.collectAsStateWithLifecycle()
     val shipmentState by viewModel.shipmentState.collectAsStateWithLifecycle()
     val kebeleStatistics by viewModel.kebeleStatistics.collectAsStateWithLifecycle()
     val isOffline by viewModel.isOfflineSimulated.collectAsStateWithLifecycle()
@@ -76,6 +91,9 @@ fun ArsoAderApp(viewModel: ArsoAderViewModel = viewModel()) {
     val recentReceipt by viewModel.recentReceipt.collectAsStateWithLifecycle()
     val userMessage by viewModel.userMessage.collectAsStateWithLifecycle()
 
+    val strings = AppStrings.get(currentLanguage)
+    var showLanguageDialog by remember { mutableStateOf(false) }
+    var showInstallDialog by remember { mutableStateOf(true) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(userMessage) {
@@ -90,29 +108,43 @@ fun ArsoAderApp(viewModel: ArsoAderViewModel = viewModel()) {
         viewModel.navigateTo(ArsoScreen.HOME)
     }
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        topBar = {
-            ArsoTopBar(
-                currentScreen = currentScreen,
-                isOfflineSimulated = isOffline,
-                onNavigateBack = { viewModel.navigateTo(ArsoScreen.HOME) },
-                onToggleOffline = { viewModel.toggleOfflineSimulated() },
-                onVoiceGuideClick = {
-                    val defaultMsg = when (currentScreen) {
-                        ArsoScreen.HOME -> "እንኳን ወደ አርሶ አደር መተግበሪያ በደህና መጡ! ማዳበሪያ ለመውሰድ፣ ክፍያ ለመክፈል ወይም ሰብል ለመሸጥ ከታች ያሉትን ቁልፎች ይጫኑ።"
-                        ArsoScreen.PROFILE -> "እዚህ ማህደር ላይ ፎቶዎን፣ ጾታዎን፣ ስምዎን፣ አድራሻዎን፣ የባንክ አካውንትዎን እና የመሬትዎን ልክ ያስመዝግቡ።"
-                        ArsoScreen.LAND_ADMIN_OFFICE -> "ይህ የቀበሌ ግብርና እና መሬት አስተዳደር ጽ/ቤት ዳሽቦርድ ነው። የተመዘገቡ አርሶ አደሮች ብዛት፣ የሴትና ወንድ ስሌት፣ የተሰበሰበ ገቢ እና የተፈፀመ ወጪ እዚህ ይታያል።"
-                        ArsoScreen.QUEUE_TOKEN -> "የማዳበሪያ መውሰጃ ተራ ቁጥርዎ እና የቀበሌ መጋዘን መረጃው እዚህ ይገኛል።"
-                        ArsoScreen.PAYMENT -> "የማዳበሪያ፣ የመሬት ግብር፣ የምርጥ ዘር ወይም የመስኖ ክፍያዎን በሞባይል ከቤትዎ ሆነው ይክፈሉ፤ ህጋዊ ደረሰኝ ወዲያው ይሰጥዎታል።"
-                        ArsoScreen.LAND_CALCULATOR -> "የመሬትዎን ስፋት በሄክታር ወይም በጥማድ በማስገባት የሚያስፈልገዎትን የማዳበሪያ መጠን ያሰሉ።"
-                        ArsoScreen.GPS_TRACKING -> "የማዳበሪያ ጭነቱ ከጅቡቲ ወደብ ተነስቶ ወደ ቀበሌዎ መጋዘን የደረሰበትን መንገድ በጂፒኤስ ይከታተሉ።"
-                        ArsoScreen.MARKETPLACE -> "ያመረቱትን ሰብል ያለ ምንም ደላላ በቀጥታ ለሸማቾች ለመሸጥ እዚህ ይመዝገቡ።"
-                    }
-                    viewModel.showVoiceGuide(defaultMsg)
-                }
-            )
-        },
+    // Centered responsive box for desktop/tablet web browsers and mobile phones
+    androidx.compose.foundation.layout.Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)),
+        contentAlignment = Alignment.TopCenter
+    ) {
+        Scaffold(
+            modifier = Modifier
+                .fillMaxSize()
+                .widthIn(max = 680.dp),
+            topBar = {
+                ArsoTopBar(
+                    currentScreen = currentScreen,
+                    currentLanguage = currentLanguage,
+                    isOfflineSimulated = isOffline,
+                    onNavigateBack = { viewModel.navigateTo(ArsoScreen.HOME) },
+                    onToggleOffline = { viewModel.toggleOfflineSimulated() },
+                    onVoiceGuideClick = {
+                        val defaultMsg = when (currentScreen) {
+                            ArsoScreen.HOME -> strings.voiceHome
+                            ArsoScreen.PROFILE -> strings.voiceProfile
+                            ArsoScreen.LAND_ADMIN_OFFICE -> strings.voiceOffice
+                            ArsoScreen.INPUT_SUPPLIERS -> strings.voiceInputs
+                            ArsoScreen.QUEUE_TOKEN -> strings.voiceQueue
+                            ArsoScreen.PAYMENT -> strings.voicePayment
+                            ArsoScreen.LAND_CALCULATOR -> "${strings.titleLandCalc}: ${strings.subtitleLandCalc}"
+                            ArsoScreen.GPS_TRACKING -> "${strings.titleGps}: ${strings.subtitleGps}"
+                            ArsoScreen.MARKETPLACE -> strings.voiceMarket
+                            ArsoScreen.SYSTEM_INTEGRATION_HUB -> "ይህ ገጽ አፕሊኬሽኑን በፕሌይ ስቶር ለማግኘት፣ በቀላሉ ወደ ስልክ ለመጫን እና አስፈላጊ የሲስተም ማገናኛዎችን ለመጠቀም የሚያስችል ነው።"
+                        }
+                        viewModel.showVoiceGuide(defaultMsg)
+                    },
+                    onLanguageClick = { showLanguageDialog = true },
+                    onInstallClick = { showInstallDialog = true }
+                )
+            },
         bottomBar = {
             NavigationBar(
                 containerColor = MaterialTheme.colorScheme.surface,
@@ -121,38 +153,44 @@ fun ArsoAderApp(viewModel: ArsoAderViewModel = viewModel()) {
                 NavigationBarItem(
                     selected = currentScreen == ArsoScreen.HOME,
                     onClick = { viewModel.navigateTo(ArsoScreen.HOME) },
-                    icon = { Icon(Icons.Default.Home, contentDescription = "መነሻ") },
-                    label = { Text("መነሻ", fontSize = 10.sp, fontWeight = FontWeight.SemiBold) }
+                    icon = { Icon(Icons.Default.Home, contentDescription = strings.navHome) },
+                    label = { Text(strings.navHome, fontSize = 9.sp, fontWeight = FontWeight.SemiBold) }
                 )
                 NavigationBarItem(
-                    selected = currentScreen == ArsoScreen.LAND_ADMIN_OFFICE,
-                    onClick = { viewModel.navigateTo(ArsoScreen.LAND_ADMIN_OFFICE) },
-                    icon = { Icon(Icons.Default.AccountBalance, contentDescription = "ጽ/ቤት") },
-                    label = { Text("ጽ/ቤት", fontSize = 10.sp, fontWeight = FontWeight.SemiBold) }
+                    selected = currentScreen == ArsoScreen.INPUT_SUPPLIERS,
+                    onClick = { viewModel.navigateTo(ArsoScreen.INPUT_SUPPLIERS) },
+                    icon = { Icon(Icons.Default.Agriculture, contentDescription = strings.navInputs) },
+                    label = { Text(strings.navInputs, fontSize = 9.sp, fontWeight = FontWeight.SemiBold) }
+                )
+                NavigationBarItem(
+                    selected = currentScreen == ArsoScreen.MARKETPLACE,
+                    onClick = { viewModel.navigateTo(ArsoScreen.MARKETPLACE) },
+                    icon = { Icon(Icons.Default.Storefront, contentDescription = strings.navMarket) },
+                    label = { Text(strings.navMarket, fontSize = 9.sp, fontWeight = FontWeight.SemiBold) }
                 )
                 NavigationBarItem(
                     selected = currentScreen == ArsoScreen.QUEUE_TOKEN,
                     onClick = { viewModel.navigateTo(ArsoScreen.QUEUE_TOKEN) },
-                    icon = { Icon(Icons.Default.Assignment, contentDescription = "ተራዬ") },
-                    label = { Text("ተራዬ", fontSize = 10.sp, fontWeight = FontWeight.SemiBold) }
+                    icon = { Icon(Icons.Default.Assignment, contentDescription = strings.navTurn) },
+                    label = { Text(strings.navTurn, fontSize = 9.sp, fontWeight = FontWeight.SemiBold) }
                 )
                 NavigationBarItem(
                     selected = currentScreen == ArsoScreen.PAYMENT,
                     onClick = { viewModel.navigateTo(ArsoScreen.PAYMENT) },
-                    icon = { Icon(Icons.Default.Payment, contentDescription = "ክፍያ") },
-                    label = { Text("ክፍያ", fontSize = 10.sp, fontWeight = FontWeight.SemiBold) }
+                    icon = { Icon(Icons.Default.Payment, contentDescription = strings.navPayment) },
+                    label = { Text(strings.navPayment, fontSize = 9.sp, fontWeight = FontWeight.SemiBold) }
                 )
                 NavigationBarItem(
-                    selected = currentScreen == ArsoScreen.GPS_TRACKING,
-                    onClick = { viewModel.navigateTo(ArsoScreen.GPS_TRACKING) },
-                    icon = { Icon(Icons.Default.LocalShipping, contentDescription = "ጂፒኤስ") },
-                    label = { Text("ጂፒኤስ", fontSize = 10.sp, fontWeight = FontWeight.SemiBold) }
+                    selected = currentScreen == ArsoScreen.LAND_ADMIN_OFFICE,
+                    onClick = { viewModel.navigateTo(ArsoScreen.LAND_ADMIN_OFFICE) },
+                    icon = { Icon(Icons.Default.AccountBalance, contentDescription = strings.navOffice) },
+                    label = { Text(strings.navOffice, fontSize = 9.sp, fontWeight = FontWeight.SemiBold) }
                 )
                 NavigationBarItem(
                     selected = currentScreen == ArsoScreen.PROFILE,
                     onClick = { viewModel.navigateTo(ArsoScreen.PROFILE) },
-                    icon = { Icon(Icons.Default.Person, contentDescription = "ማህደር") },
-                    label = { Text("ማህደር", fontSize = 10.sp, fontWeight = FontWeight.SemiBold) }
+                    icon = { Icon(Icons.Default.Person, contentDescription = strings.navProfile) },
+                    label = { Text(strings.navProfile, fontSize = 9.sp, fontWeight = FontWeight.SemiBold) }
                 )
             }
         },
@@ -168,7 +206,27 @@ fun ArsoAderApp(viewModel: ArsoAderViewModel = viewModel()) {
                     farmerProfile = farmerProfile,
                     activeToken = activeToken,
                     isOffline = isOffline,
+                    currentLanguage = currentLanguage,
                     onNavigate = { viewModel.navigateTo(it) },
+                    onVoiceClick = { viewModel.showVoiceGuide(it) },
+                    onLanguageClick = { showLanguageDialog = true },
+                    onInstallClick = { showInstallDialog = true }
+                )
+                ArsoScreen.INPUT_SUPPLIERS -> InputSupplierScreen(
+                    profile = farmerProfile,
+                    inputs = inputs,
+                    orders = inputOrders,
+                    onOrderInput = { input, quantity, farmerName, farmerPhone, pickupDepot ->
+                        viewModel.orderAgriculturalInput(input, quantity, farmerName, farmerPhone, pickupDepot)
+                    },
+                    onVoiceClick = { viewModel.showVoiceGuide(it) }
+                )
+                ArsoScreen.MARKETPLACE -> MarketplaceScreen(
+                    profile = farmerProfile,
+                    crops = crops,
+                    onAddCrop = { cropName, sellerName, sellerPhone, location, quantity, price ->
+                        viewModel.addMarketCrop(cropName, sellerName, sellerPhone, location, quantity, price)
+                    },
                     onVoiceClick = { viewModel.showVoiceGuide(it) }
                 )
                 ArsoScreen.LAND_ADMIN_OFFICE -> LandAdminOfficeScreen(
@@ -273,12 +331,8 @@ fun ArsoAderApp(viewModel: ArsoAderViewModel = viewModel()) {
                     shipment = shipmentState,
                     onVoiceClick = { viewModel.showVoiceGuide(it) }
                 )
-                ArsoScreen.MARKETPLACE -> MarketplaceScreen(
-                    profile = farmerProfile,
-                    crops = crops,
-                    onAddCrop = { cropName, sellerName, sellerPhone, location, quantity, price ->
-                        viewModel.addMarketCrop(cropName, sellerName, sellerPhone, location, quantity, price)
-                    },
+                ArsoScreen.SYSTEM_INTEGRATION_HUB -> SystemIntegrationScreen(
+                    currentLanguage = currentLanguage,
                     onVoiceClick = { viewModel.showVoiceGuide(it) }
                 )
             }
@@ -298,6 +352,24 @@ fun ArsoAderApp(viewModel: ArsoAderViewModel = viewModel()) {
                     onDismiss = { viewModel.dismissReceipt() }
                 )
             }
+
+            // Language Selection Dialog
+            if (showLanguageDialog) {
+                LanguageSelectionDialog(
+                    currentLanguage = currentLanguage,
+                    onLanguageSelected = { viewModel.setLanguage(it) },
+                    onDismiss = { showLanguageDialog = false }
+                )
+            }
+
+            // Direct Phone Install Dialog (Auto-opens on launch or when clicked)
+            if (showInstallDialog) {
+                DirectInstallDialog(
+                    currentLanguage = currentLanguage,
+                    onDismiss = { showInstallDialog = false }
+                )
+            }
         }
     }
+}
 }

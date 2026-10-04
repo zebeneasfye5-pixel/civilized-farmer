@@ -4,10 +4,14 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.local.AppDatabase
+import com.example.data.model.AgriculturalInputItem
+import com.example.data.model.CreatorEarningsSummary
+import com.example.data.model.CreatorPayoutRecord
 import com.example.data.model.ExpenseRecord
 import com.example.data.model.FarmerProfile
 import com.example.data.model.FertilizerQueueToken
 import com.example.data.model.FertilizerShipment
+import com.example.data.model.InputOrderItem
 import com.example.data.model.KebeleStatistics
 import com.example.data.model.MarketCropItem
 import com.example.data.model.PaymentRecord
@@ -24,11 +28,14 @@ enum class ArsoScreen(val titleAmharic: String, val subtitleAmharic: String) {
     HOME("አርሶ አደር", "የግብርና ግብአት እና ማዳበሪያ ዲጂታል ማዕከል"),
     PROFILE("የአርሶ አደር ማህደር", "ሙሉ የህይወት ታሪክ፣ ፎቶ፣ መታወቂያና የባንክ ሂሳብ"),
     LAND_ADMIN_OFFICE("የግብርናና መሬት አስተዳደር", "የአርሶ አደር ብዛት፣ ሴት ወንድ ስሌትና የወጪ ገቢ ሂሳብ"),
+    INPUT_SUPPLIERS("የግብዓት መግዣ ማዕከል", "ምርጥ ዘር፣ ማዳበሪያና የግብርና መሳሪያዎች ግዢ"),
     QUEUE_TOKEN("የማዳበሪያ መውሰጃ ተራ", "የተራ ቁጥር፣ ቀን እና የቀበሌ መጋዘን መረጃ"),
     PAYMENT("የግብአትና ግብር ክፍያ", "በቴሌብርና ሲቢኢ ይክፈሉ፤ ዲጂታል ደረሰኝ ይውሰዱ"),
     LAND_CALCULATOR("የመሬት ልክ መመዝገቢያ", "የመሬት ስፋትና የሚያስፈልግ የማዳበሪያ መጠን ስሌት"),
     GPS_TRACKING("የጭነት ጂፒኤስ ክትትል", "ማዳበሪያው ከውጭ እስከ ቀበሌ መጋዘን የደረሰበት መንገድ"),
-    MARKETPLACE("ያለ ደላላ የሰብል ገበያ", "ምርትዎን በቀጥታ ለተጠቃሚው ያቅርቡ")
+    MARKETPLACE("ያለ ደላላ የሰብል ገበያ", "ምርትዎን በቀጥታ ለተጠቃሚው ያቅርቡ"),
+    SYSTEM_INTEGRATION_HUB("የሲስተም ማገናኛና ፕሌይ ስቶር", "በፕሌይ ስቶር መጫኛ፣ ማገናኛ ቁልፎችና የኤፒኬ ማጋሪያ"),
+    CREATOR_SECRET_PORTAL("ሚስጥራዊ የገንቢ ማዕከል", "የፈጣሪ ገቢ፣ የቴሌኮም VAS እና የክፍያ ማስተላለፊያ")
 }
 
 class ArsoAderViewModel(application: Application) : AndroidViewModel(application) {
@@ -36,6 +43,10 @@ class ArsoAderViewModel(application: Application) : AndroidViewModel(application
     private val repository: ArsoAderRepository
 
     val currentScreen = MutableStateFlow(ArsoScreen.HOME)
+
+    // Ethiopian Language selection state
+    private val _selectedLanguage = MutableStateFlow(com.example.ui.locale.AppLanguage.AMHARIC)
+    val selectedLanguage: StateFlow<com.example.ui.locale.AppLanguage> = _selectedLanguage.asStateFlow()
 
     // Voice assistant / Audio guide message state
     private val _voiceGuideMessage = MutableStateFlow<String?>(null)
@@ -68,8 +79,20 @@ class ArsoAderViewModel(application: Application) : AndroidViewModel(application
     // Expense Records Flow
     val expenses: StateFlow<List<ExpenseRecord>>
 
-    // Crops Flow
+    // Crops Flow (Marketplace - ያለ ደላላ)
     val crops: StateFlow<List<MarketCropItem>>
+
+    // Agricultural Inputs Flow (የግብዓት መግዣ)
+    val inputs: StateFlow<List<AgriculturalInputItem>>
+
+    // Agricultural Input Orders Flow
+    val inputOrders: StateFlow<List<InputOrderItem>>
+
+    // Secret Creator Monetization & Ethiopian Payouts (Hidden from regular users)
+    val creatorEarnings: StateFlow<CreatorEarningsSummary?>
+    val creatorPayouts: StateFlow<List<CreatorPayoutRecord>>
+    private val _isCreatorPortalUnlocked = MutableStateFlow(false)
+    val isCreatorPortalUnlocked: StateFlow<Boolean> = _isCreatorPortalUnlocked.asStateFlow()
 
     // Kebele Automatic Aggregated Statistics Flow (ሴት ወንድ ድምር፣ የመሬት ስፋት፣ ወጪና ገቢ)
     val kebeleStatistics: StateFlow<KebeleStatistics>
@@ -113,6 +136,30 @@ class ArsoAderViewModel(application: Application) : AndroidViewModel(application
         )
 
         crops = repository.allCrops.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+        inputs = repository.allInputs.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+        inputOrders = repository.allInputOrders.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+        creatorEarnings = repository.creatorEarnings.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
+
+        creatorPayouts = repository.allCreatorPayouts.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
@@ -179,6 +226,12 @@ class ArsoAderViewModel(application: Application) : AndroidViewModel(application
 
     fun navigateTo(screen: ArsoScreen) {
         currentScreen.value = screen
+    }
+
+    fun setLanguage(language: com.example.ui.locale.AppLanguage) {
+        _selectedLanguage.value = language
+        val strings = com.example.ui.locale.AppStrings.get(language)
+        _userMessage.value = "${language.nativeName} (${language.englishName}): ${strings.languageChangedSuccess}"
     }
 
     fun toggleOfflineSimulated() {
@@ -320,10 +373,77 @@ class ArsoAderViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    fun orderAgriculturalInput(
+        input: AgriculturalInputItem,
+        quantity: Int,
+        farmerName: String,
+        farmerPhone: String,
+        pickupDepot: String
+    ) {
+        viewModelScope.launch {
+            val total = input.priceBirr * quantity
+            val order = repository.orderInput(
+                inputName = input.name,
+                category = input.category,
+                quantity = quantity,
+                totalBirr = total,
+                farmerName = farmerName,
+                farmerPhone = farmerPhone,
+                pickupDepot = pickupDepot
+            )
+            _userMessage.value = "የትዕዛዝ ቁጥር ${order.orderNumber} ተመዝግቧል! በመጋዘን ተገኝተው መረከብ ይችላሉ።"
+        }
+    }
+
     fun requestNewQueueToken(landHectares: Double, farmerName: String, kebele: String) {
         viewModelScope.launch {
             repository.requestNewQueueToken(landHectares, farmerName, kebele)
             _userMessage.value = "አዲስ የማዳበሪያ መውሰጃ ተራ ቁጥር ተመድቦልዎታል!"
+        }
+    }
+
+    // Secret Creator Monetization & Ethiopian Payout Operations
+    fun unlockCreatorPortal(enteredPin: String): Boolean {
+        return if (enteredPin.trim() == "7788" || enteredPin.trim() == "2026") {
+            _isCreatorPortalUnlocked.value = true
+            navigateTo(ArsoScreen.CREATOR_SECRET_PORTAL)
+            true
+        } else {
+            _userMessage.value = "የተሳሳተ የይለፍ ቃል ነው!"
+            false
+        }
+    }
+
+    fun lockCreatorPortal() {
+        _isCreatorPortalUnlocked.value = false
+        if (currentScreen.value == ArsoScreen.CREATOR_SECRET_PORTAL) {
+            navigateTo(ArsoScreen.HOME)
+        }
+    }
+
+    fun recordShareAction() {
+        viewModelScope.launch {
+            repository.recordShareEarning()
+        }
+    }
+
+    fun recordLikeAction() {
+        viewModelScope.launch {
+            repository.recordLikeEarning()
+        }
+    }
+
+    fun updateCreatorPayoutDetails(method: String, accountNumber: String, accountName: String) {
+        viewModelScope.launch {
+            repository.updateCreatorPayoutDetails(method, accountNumber, accountName)
+            _userMessage.value = "የክፍያ መቀበያ መረጃዎ በተሳካ ሁኔታ ተሻሽሏል!"
+        }
+    }
+
+    fun processCreatorWithdrawal(amount: Double, method: String, targetAccount: String, recipientName: String) {
+        viewModelScope.launch {
+            val record = repository.processCreatorPayout(amount, method, targetAccount, recipientName)
+            _userMessage.value = "ክፍያ ${record.amountBirr} ብር ወደ ${record.method} (${record.targetAccount}) በተሳካ ሁኔታ ተላልፏል! የማመሳከሪያ ቁጥር፦ ${record.referenceNumber}"
         }
     }
 }

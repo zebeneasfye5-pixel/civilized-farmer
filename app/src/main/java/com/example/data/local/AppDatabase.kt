@@ -4,9 +4,13 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.data.model.AgriculturalInputItem
+import com.example.data.model.CreatorEarningsSummary
+import com.example.data.model.CreatorPayoutRecord
 import com.example.data.model.ExpenseRecord
 import com.example.data.model.FarmerProfile
 import com.example.data.model.FertilizerQueueToken
+import com.example.data.model.InputOrderItem
 import com.example.data.model.MarketCropItem
 import com.example.data.model.PaymentRecord
 
@@ -16,9 +20,13 @@ import com.example.data.model.PaymentRecord
         FertilizerQueueToken::class,
         PaymentRecord::class,
         ExpenseRecord::class,
-        MarketCropItem::class
+        MarketCropItem::class,
+        AgriculturalInputItem::class,
+        InputOrderItem::class,
+        CreatorEarningsSummary::class,
+        CreatorPayoutRecord::class
     ],
-    version = 2,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

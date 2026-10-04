@@ -5,9 +5,13 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.example.data.model.AgriculturalInputItem
+import com.example.data.model.CreatorEarningsSummary
+import com.example.data.model.CreatorPayoutRecord
 import com.example.data.model.ExpenseRecord
 import com.example.data.model.FarmerProfile
 import com.example.data.model.FertilizerQueueToken
+import com.example.data.model.InputOrderItem
 import com.example.data.model.MarketCropItem
 import com.example.data.model.PaymentRecord
 import kotlinx.coroutines.flow.Flow
@@ -58,7 +62,10 @@ interface FarmerDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertExpense(expense: ExpenseRecord)
 
-    // Direct Marketplace Crops
+    // Direct Marketplace Crops (ያለ ደላላ የሰብል ገበያ)
+    @Query("SELECT COUNT(*) FROM market_crops")
+    suspend fun getCropsCount(): Int
+
     @Query("SELECT * FROM market_crops ORDER BY postDate DESC")
     fun getAllCrops(): Flow<List<MarketCropItem>>
 
@@ -67,4 +74,37 @@ interface FarmerDao {
 
     @Delete
     suspend fun deleteCrop(crop: MarketCropItem)
+
+    // Agricultural Inputs (የግብዓት መግዣ)
+    @Query("SELECT COUNT(*) FROM agricultural_inputs")
+    suspend fun getInputsCount(): Int
+
+    @Query("SELECT * FROM agricultural_inputs ORDER BY id ASC")
+    fun getAllInputs(): Flow<List<AgriculturalInputItem>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertInput(input: AgriculturalInputItem)
+
+    // Input Orders (የትዕዛዝ መዝገብ)
+    @Query("SELECT * FROM input_orders ORDER BY orderDate DESC")
+    fun getAllInputOrders(): Flow<List<InputOrderItem>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertInputOrder(order: InputOrderItem)
+
+    // Secret Creator Monetization & Ethiopian Payouts
+    @Query("SELECT * FROM creator_earnings WHERE id = 'creator_main' LIMIT 1")
+    fun getCreatorEarnings(): Flow<CreatorEarningsSummary?>
+
+    @Query("SELECT * FROM creator_earnings WHERE id = 'creator_main' LIMIT 1")
+    suspend fun getCreatorEarningsSync(): CreatorEarningsSummary?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertOrUpdateEarnings(earnings: CreatorEarningsSummary)
+
+    @Query("SELECT * FROM creator_payouts ORDER BY timestamp DESC")
+    fun getAllCreatorPayouts(): Flow<List<CreatorPayoutRecord>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPayoutRecord(payout: CreatorPayoutRecord)
 }
