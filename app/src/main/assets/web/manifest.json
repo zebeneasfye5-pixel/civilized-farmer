@@ -1,0 +1,21 @@
+{
+  "name": "አርሶ አደር - የኢትዮጵያ ግብርና ዲጂታል ፖርታል",
+  "short_name": "አርሶ አደር",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#1B5E20",
+  "theme_color": "#2E7D32",
+  "description": "የኢትዮጵያ አርሶ አደሮች የአፈር ማዳበሪያ ተራ ማወቂያ፣ የግብአት ክፍያ፣ የቀጥታ ጂፒኤስ ጭነት መከታተያ፣ የመሬት ልክ መመዝገቢያና ያለ ደላላ የሰብል መሸጫ ዘመናዊ መተግበሪያ።",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

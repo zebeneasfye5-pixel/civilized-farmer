@@ -45,7 +45,8 @@ fun ArsoTopBar(
     onToggleOffline: () -> Unit,
     onVoiceGuideClick: () -> Unit,
     onLanguageClick: () -> Unit,
-    onInstallClick: () -> Unit = {}
+    onInstallClick: () -> Unit = {},
+    onWebModeClick: () -> Unit = {}
 ) {
     val strings = AppStrings.get(currentLanguage)
 
@@ -60,6 +61,8 @@ fun ArsoTopBar(
         ArsoScreen.GPS_TRACKING -> strings.titleGps
         ArsoScreen.MARKETPLACE -> strings.titleMarketplace
         ArsoScreen.SYSTEM_INTEGRATION_HUB -> "የሲስተም ማገናኛና ፕሌይ ስቶር"
+        ArsoScreen.CREATOR_SECRET_PORTAL -> "ሚስጥራዊ የገንቢ ማዕከል"
+        ArsoScreen.WEB_APP_VIEW -> "የድረ-ገጽ እይታ (Web App)"
     }
 
     CenterAlignedTopAppBar(
@@ -112,6 +115,35 @@ fun ArsoTopBar(
                     Spacer(modifier = Modifier.width(3.dp))
                     Text(
                         text = "ጫን",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
+
+            // Web Mode Switcher (የድረ-ገጽ እይታ)
+            Surface(
+                onClick = onWebModeClick,
+                shape = RoundedCornerShape(16.dp),
+                color = Color(0xFF1565C0),
+                modifier = Modifier
+                    .padding(end = 4.dp)
+                    .testTag("topbar_web_mode_button")
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 5.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Language,
+                        contentDescription = "Web",
+                        tint = Color.White,
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text(
+                        text = "Web",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White

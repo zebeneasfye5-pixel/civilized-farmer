@@ -45,7 +45,9 @@ import com.example.ui.components.AudioGuideDialog
 import com.example.ui.components.DirectInstallDialog
 import com.example.ui.components.LanguageSelectionDialog
 import com.example.ui.components.ReceiptDialog
+import com.example.ui.components.SecretAdminPinDialog
 import com.example.ui.locale.AppStrings
+import com.example.ui.screens.CreatorSecretPortalScreen
 import com.example.ui.screens.GpsTrackingScreen
 import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.InputSupplierScreen
@@ -56,6 +58,7 @@ import com.example.ui.screens.OnboardingProfileScreen
 import com.example.ui.screens.PaymentScreen
 import com.example.ui.screens.QueueTokenScreen
 import com.example.ui.screens.SystemIntegrationScreen
+import com.example.ui.screens.WebViewScreen
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.viewmodel.ArsoAderViewModel
 import com.example.ui.viewmodel.ArsoScreen
@@ -90,10 +93,13 @@ fun ArsoAderApp(viewModel: ArsoAderViewModel = viewModel()) {
     val voiceGuideMessage by viewModel.voiceGuideMessage.collectAsStateWithLifecycle()
     val recentReceipt by viewModel.recentReceipt.collectAsStateWithLifecycle()
     val userMessage by viewModel.userMessage.collectAsStateWithLifecycle()
+    val creatorEarnings by viewModel.creatorEarnings.collectAsStateWithLifecycle()
+    val creatorPayouts by viewModel.creatorPayouts.collectAsStateWithLifecycle()
 
     val strings = AppStrings.get(currentLanguage)
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showInstallDialog by remember { mutableStateOf(true) }
+    var showSecretPinDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(userMessage) {
@@ -138,11 +144,14 @@ fun ArsoAderApp(viewModel: ArsoAderViewModel = viewModel()) {
                             ArsoScreen.GPS_TRACKING -> "${strings.titleGps}: ${strings.subtitleGps}"
                             ArsoScreen.MARKETPLACE -> strings.voiceMarket
                             ArsoScreen.SYSTEM_INTEGRATION_HUB -> "ይህ ገጽ አፕሊኬሽኑን በፕሌይ ስቶር ለማግኘት፣ በቀላሉ ወደ ስልክ ለመጫን እና አስፈላጊ የሲስተም ማገናኛዎችን ለመጠቀም የሚያስችል ነው።"
+                            ArsoScreen.CREATOR_SECRET_PORTAL -> "ሚስጥራዊ የገንቢ ማዕከል እና የክፍያ ማስተላለፊያ"
+                            ArsoScreen.WEB_APP_VIEW -> "የቀጥታ ድረ-ገጽ እይታ"
                         }
                         viewModel.showVoiceGuide(defaultMsg)
                     },
                     onLanguageClick = { showLanguageDialog = true },
-                    onInstallClick = { showInstallDialog = true }
+                    onInstallClick = { showInstallDialog = true },
+                    onWebModeClick = { viewModel.navigateTo(ArsoScreen.WEB_APP_VIEW) }
                 )
             },
         bottomBar = {
@@ -333,7 +342,23 @@ fun ArsoAderApp(viewModel: ArsoAderViewModel = viewModel()) {
                 )
                 ArsoScreen.SYSTEM_INTEGRATION_HUB -> SystemIntegrationScreen(
                     currentLanguage = currentLanguage,
-                    onVoiceClick = { viewModel.showVoiceGuide(it) }
+                    onVoiceClick = { viewModel.showVoiceGuide(it) },
+                    onShareAction = { viewModel.recordShareAction() },
+                    onSecretAdminTap = { showSecretPinDialog = true }
+                )
+                ArsoScreen.CREATOR_SECRET_PORTAL -> CreatorSecretPortalScreen(
+                    earnings = creatorEarnings,
+                    payouts = creatorPayouts,
+                    onUpdatePayoutDetails = { method, account, name ->
+                        viewModel.updateCreatorPayoutDetails(method, account, name)
+                    },
+                    onWithdraw = { amount, method, targetAccount, recipientName ->
+                        viewModel.processCreatorWithdrawal(amount, method, targetAccount, recipientName)
+                    },
+                    onLockAndExit = { viewModel.lockCreatorPortal() }
+                )
+                ArsoScreen.WEB_APP_VIEW -> WebViewScreen(
+                    onSwitchToNative = { viewModel.navigateTo(ArsoScreen.HOME) }
                 )
             }
 
@@ -367,6 +392,16 @@ fun ArsoAderApp(viewModel: ArsoAderViewModel = viewModel()) {
                 DirectInstallDialog(
                     currentLanguage = currentLanguage,
                     onDismiss = { showInstallDialog = false }
+                )
+            }
+
+            // Secret Admin PIN Dialog (Hidden from regular users)
+            if (showSecretPinDialog) {
+                SecretAdminPinDialog(
+                    onDismiss = { showSecretPinDialog = false },
+                    onPinSubmit = { pin ->
+                        viewModel.unlockCreatorPortal(pin)
+                    }
                 )
             }
         }

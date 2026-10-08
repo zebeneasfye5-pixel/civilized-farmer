@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,6 +26,7 @@ import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.Payment
@@ -90,6 +92,120 @@ fun HomeScreen(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // 1. Prominent Top Banner: "አፕሊኬሽኑን አውርድና ጫን (100% በነፃ)"
+        item {
+            Card(
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF0F5132)),
+                border = BorderStroke(1.5.dp, Color(0xFF34D399)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("top_install_action_card")
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(42.dp)
+                                    .background(Color(0xFF34D399), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Download,
+                                    contentDescription = null,
+                                    tint = Color(0xFF064E3B),
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "አፕሊኬሽኑን አውርድና ጫን",
+                                        fontWeight = FontWeight.ExtraBold,
+                                        fontSize = 15.sp,
+                                        color = Color.White
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = Color(0xFF34D399)
+                                    ) {
+                                        Text(
+                                            text = "100% ነፃ",
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF064E3B),
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = "ያለምንም ክፍያ በቀጥታ ስልክዎ ላይ ይጫኑ",
+                                    fontSize = 11.sp,
+                                    color = Color(0xFFA7F3D0)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(
+                        text = "ኢንተርኔት በሌለበት ጊዜም በኦፍላይን የሚሰራውን ይፋዊ የአርሶ አደር መተግበሪያ አሁኑኑ በስልክዎ ላይ በቀላሉ ይጫኑ።",
+                        fontSize = 12.sp,
+                        color = Color(0xFFE2E8F0),
+                        lineHeight = 17.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Side-by-side action buttons
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = onInstallClick,
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp)
+                                .testTag("btn_quick_install_home")
+                        ) {
+                            Icon(Icons.Default.Download, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("📥 አሁን ጫን", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                onNavigate(ArsoScreen.SYSTEM_INTEGRATION_HUB)
+                            },
+                            border = BorderStroke(1.dp, Color(0xFFA7F3D0)),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp)
+                        ) {
+                            Icon(Icons.Default.Shop, contentDescription = null, tint = Color(0xFFA7F3D0), modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("ፕሌይ ስቶር & ሊንክ", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFFA7F3D0))
+                        }
+                    }
+                }
+            }
+        }
+
         // Welcome and Hero Banner
         item {
             ElevatedCard(

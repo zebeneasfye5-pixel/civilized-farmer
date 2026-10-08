@@ -35,7 +35,8 @@ enum class ArsoScreen(val titleAmharic: String, val subtitleAmharic: String) {
     GPS_TRACKING("የጭነት ጂፒኤስ ክትትል", "ማዳበሪያው ከውጭ እስከ ቀበሌ መጋዘን የደረሰበት መንገድ"),
     MARKETPLACE("ያለ ደላላ የሰብል ገበያ", "ምርትዎን በቀጥታ ለተጠቃሚው ያቅርቡ"),
     SYSTEM_INTEGRATION_HUB("የሲስተም ማገናኛና ፕሌይ ስቶር", "በፕሌይ ስቶር መጫኛ፣ ማገናኛ ቁልፎችና የኤፒኬ ማጋሪያ"),
-    CREATOR_SECRET_PORTAL("ሚስጥራዊ የገንቢ ማዕከል", "የፈጣሪ ገቢ፣ የቴሌኮም VAS እና የክፍያ ማስተላለፊያ")
+    CREATOR_SECRET_PORTAL("ሚስጥራዊ የገንቢ ማዕከል", "የፈጣሪ ገቢ፣ የቴሌኮም VAS እና የክፍያ ማስተላለፊያ"),
+    WEB_APP_VIEW("የድረ-ገጽ እይታ (Web App)", "በHTML5 እና PWA የቀጥታ ዌብሳይት እይታ")
 }
 
 class ArsoAderViewModel(application: Application) : AndroidViewModel(application) {

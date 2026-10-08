@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>አርሶ አደር - የኢትዮጵያ ግብርና ዲጂታል ፖርታል (Arso Ader Web)</title>
+  <meta name="description" content="የኢትዮጵያ አርሶ አደሮች የአፈር ማዳበሪያ ተራ ማወቂያ፣ የግብአት ክፍያ፣ የቀጥታ ጂፒኤስ ጭነት መከታተያ፣ የመሬት ልክ መመዝገቢያና ያለ ደላላ የሰብል መሸጫ ዘመናዊ ድረ-ገጽ።">
+  <meta name="theme-color" content="#2E7D32">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Top Prominent Side-by-Side Download & Install Notification -->
+  <div style="background: linear-gradient(135deg, #064E3B, #0F766E); color: white; padding: 14px 16px; border-bottom: 2px solid #34D399; box-shadow: 0 4px 14px rgba(0,0,0,0.18);">
+    <div style="max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="background: #34D399; color: #064E3B; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: bold;">
+          📲
+        </div>
+        <div>
+          <div style="font-size: 1.05rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+            አፕሊኬሽኑን ስልክዎ ላይ አውርደው ይጫኑ!
+            <span style="background: #34D399; color: #064E3B; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; font-weight: 800;">100% ነፃ</span>
+          </div>
+          <div style="font-size: 0.8rem; opacity: 0.9;">ኢንተርኔት በሌለበት ጊዜም በኦፍላይን በቀላሉ ይሰራል • ምንም ክፍያ የለውም</div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <a href="arso-ader.apk" download style="text-decoration: none;">
+          <button style="background: #10B981; color: white; border: none; padding: 10px 18px; border-radius: 20px; font-size: 0.85rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+            📥 የኤፒኬ (APK) ፋይል አውርድ
+          </button>
+        </a>
+        <button onclick="shareWebApp()" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); padding: 10px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; cursor: pointer;">
+          ⭐ አጋራ & ጫን
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Header -->
+  <header>
+    <div class="header-container">
+      <div class="logo-group">
+        <div class="logo-badge">🌾</div>
+        <div class="brand-text">
+          <h1>አርሶ አደር (Arso Ader)</h1>
+          <p>የኢትዮጵያ ግብርና ዲጂታል ፖርታል • Web Edition</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="badge-status" id="network-status">
+          <span class="status-dot"></span> ኦንላይን (ዝግጁ)
+        </div>
+        <button class="btn-install-header" onclick="shareWebApp()">📲 አጋራ</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Horizontal Scroll Navigation Tabs -->
+  <nav class="nav-bar">
+    <div class="nav-container">
+      <button class="nav-btn active" data-tab="tab-home">🏠 መነሻ ገጽ</button>
+      <button class="nav-btn" data-tab="tab-queue">🎫 የማዳበሪያ ተራ</button>
+      <button class="nav-btn" data-tab="tab-market">🛒 የሰብል ገበያ</button>
+      <button class="nav-btn" data-tab="tab-calc">📐 የመሬት ስሌት</button>
+      <button class="nav-btn" data-tab="tab-inputs">🚜 ግብዓትና ዘር</button>
+      <button class="nav-btn" data-tab="tab-payment">💳 ክፍያ (Telebirr/CBE)</button>
+      <button class="nav-btn" data-tab="tab-gps">🚚 የጭነት ጂፒኤስ</button>
+    </div>
+  </nav>
+
+  <!-- Main Body Content -->
+  <main>
+
+    <!-- 1. HOME TAB -->
+    <section id="tab-home" class="tab-pane active">
+      <div class="card hero-banner">
+        <div class="hero-title">እንኳን ወደ 'አርሶ አደር' ድረ-ገጽ በደህና መጡ! 🇪🇹</div>
+        <div class="hero-sub">የአፈር ማዳበሪያ ተራዎን ይከታተሉ፣ ያለ ደላላ ምርትዎን ይሽጡ፣ ግብዓቶችን ይዘዙና የመሬትዎን ልክ ያስሉ!</div>
+
+        <div class="quick-stats-grid">
+          <div class="stat-box">
+            <div class="stat-val">ET-42</div>
+            <div class="stat-label">የማዳበሪያ ተራ ቁጥር</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val">3 ኩንታል</div>
+            <div class="stat-label">የማዳበሪያ ድልድል (NPSB/Urea)</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val">2.0 ሄክታር</div>
+            <div class="stat-label">የተመዘገበ የመሬት ስፋት</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val">380 ብር</div>
+            <div class="stat-label">የዓመቱ የመሬት ግብር</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Action Shortcuts -->
+      <div class="section-header">
+        <div class="section-title">⚡ ፈጣን አገልግሎቶች</div>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-item" onclick="document.querySelector('[data-tab=\'tab-queue\']').click()">
+          <div class="feature-icon">🎫</div>
+          <div class="feature-info">
+            <h3>የማዳበሪያ መውሰጃ ተራ</h3>
+            <p>የተራ ቁጥርዎን፣ የቀበሌ መጋዘን መረጃንና መውሰጃ ሰዓትዎን ይመልከቱ</p>
+          </div>
+        </div>
+
+        <div class="feature-item" onclick="document.querySelector('[data-tab=\'tab-market\']').click()">
+          <div class="feature-icon">🛒</div>
+          <div class="feature-info">
+            <h3>ያለ ደላላ የሰብል ገበያ</h3>
+            <p>ጤፍ፣ ስንዴ፣ በቆሎና ሌሎች ምርቶችን በቀጥታ ለገዢዎች ያቅርቡ</p>
+          </div>
+        </div>
+
+        <div class="feature-item" onclick="document.querySelector('[data-tab=\'tab-calc\']').click()">
+          <div class="feature-icon">📐</div>
+          <div class="feature-info">
+            <h3>የመሬትና ማዳበሪያ ስሌት</h3>
+            <p>ከሄክታር ወደ ጥማድ እንዲሁም የሚፈለግ የማዳበሪያ መጠን ስሌት</p>
+          </div>
+        </div>
+
+        <div class="feature-item" onclick="document.querySelector('[data-tab=\'tab-payment\']').click()">
+          <div class="feature-icon">💳</div>
+          <div class="feature-info">
+            <h3>ቴሌብር እና ሲቢኢ ክፍያ</h3>
+            <p>የግብአት እና ዓመታዊ ግብር በቀጥታ በቴሌብር ወይም ንግድ ባንክ ይክፈሉ</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. QUEUE TOKEN TAB -->
+    <section id="tab-queue" class="tab-pane">
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">🎫 የማዳበሪያ መውሰጃ ዲጂታል ተራ</div>
+        </div>
+
+        <div style="background:var(--primary-light);border:2px dashed var(--primary);border-radius:12px;padding:20px;text-align:center;margin-bottom:16px">
+          <div style="font-size:0.9rem;color:var(--primary-dark);font-weight:700">የተመደበው ይፋዊ መለያ ኮድ</div>
+          <div style="font-size:2.2rem;font-weight:800;color:var(--primary-dark);letter-spacing:2px">ET-AGR-4921</div>
+          <div style="display:inline-block;background:var(--primary);color:white;padding:4px 14px;border-radius:20px;font-size:0.85rem;font-weight:700;margin-top:6px">
+            ተራ ቁጥር፦ 42 (ዛሬ ተራዎ ነው!)
+          </div>
+
+          <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:left;font-size:0.85rem">
+            <div><b>አርሶ አደር፦</b> ክቡር አርሶ አደር</div>
+            <div><b>ማከፋፈያ ጣቢያ፦</b> አዴት 01 ቀበሌ መጋዘን</div>
+            <div><b>ቀጠሮ ሰዓት፦</b> ከጧቱ 2:30 - 5:00</div>
+            <div><b>የማዳበሪያ ኮታ፦</b> 3 ኩንታል (NPSB + ዩሪያ)</div>
+          </div>
+        </div>
+
+        <button class="btn" onclick="alert('የማዳበሪያ መውሰጃ ተራዎ በስልክዎ ኤስኤምኤስ (SMS) ሆኖ ተልኳል!')">📩 በኤስኤምኤስ (SMS) ላክልኝ</button>
+      </div>
+    </section>
+
+    <!-- 3. MARKETPLACE TAB -->
+    <section id="tab-market" class="tab-pane">
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">🛒 ያለ ደላላ የቀጥታ የሰብል ገበያ</div>
+        </div>
+        <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:14px">
+          አርሶ አደሮች ምርታቸውን በቀጥታ ለተጠቃሚዎች ያቀርባሉ፤ ደላላ የለም፤ ሙሉ ገቢው ለአርሶ አደሩ ነው!
+        </p>
+
+        <div id="crops-list" class="items-list">
+          <!-- Rendered dynamically by app.js -->
+        </div>
+      </div>
+
+      <!-- Add Crop Form -->
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">➕ አዲስ ምርት ወደ ገበያ አቅርብ</div>
+        </div>
+        <form id="form-add-crop">
+          <div class="form-group">
+            <label class="form-label">የምርት አይነት</label>
+            <input type="text" id="crop-name" class="form-control" placeholder="ምሳሌ፦ ማኛ ነጭ ጤፍ" required>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group">
+              <label class="form-label">ዋጋ በኩንታል (ብር)</label>
+              <input type="number" id="crop-price" class="form-control" placeholder="9200" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">የምርት መጠን (በኩንታል)</label>
+              <input type="number" id="crop-qty" class="form-control" placeholder="40" required>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group">
+              <label class="form-label">የስልክ ቁጥር</label>
+              <input type="tel" id="crop-phone" class="form-control" placeholder="0918..." required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">ቀበሌ / አካባቢ</label>
+              <input type="text" id="crop-loc" class="form-control" placeholder="አዴት ቀበሌ 01" required>
+            </div>
+          </div>
+          <button type="submit" class="btn">🚀 ምርቱን ለገበያ አቅርብ</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 4. LAND CALCULATOR TAB -->
+    <section id="tab-calc" class="tab-pane">
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">📐 የመሬት ስፋትና ማዳበሪያ ስሌት</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">የመሬት ስፋት በሄክታር (Hectares)፦</label>
+          <input type="number" id="calc-hectares" class="form-control" value="2.0" step="0.1" min="0.1">
+        </div>
+
+        <div style="background:var(--background);border-radius:12px;padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px">
+          <div>
+            <div style="font-size:0.75rem;color:var(--text-muted)">በጥማድ (በቃዳ) ስሌት</div>
+            <div id="calc-timad" style="font-size:1.2rem;font-weight:700;color:var(--primary)">8.0 ጥማድ</div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem;color:var(--text-muted)">የሚፈለግ NPSB ማዳበሪያ</div>
+            <div id="calc-npsb" style="font-size:1.2rem;font-weight:700;color:var(--primary)">3 ኩንታል</div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem;color:var(--text-muted)">የሚፈለግ ዩሪያ (Urea)</div>
+            <div id="calc-urea" style="font-size:1.2rem;font-weight:700;color:var(--primary)">3 ኩንታል</div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem;color:var(--text-muted)">የመሬት ግብር መጠን</div>
+            <div id="calc-tax" style="font-size:1.2rem;font-weight:700;color:var(--primary)">380 ብር</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. AGRICULTURAL INPUTS TAB -->
+    <section id="tab-inputs" class="tab-pane">
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">🚜 የግብዓትና ምርጥ ዘር ማዕከል</div>
+        </div>
+
+        <div class="items-list">
+          <div class="item-card">
+            <div class="item-main">
+              <h4>🌾 የኩክሳ ነጭ ስንዴ ምርጥ ዘር</h4>
+              <div class="item-meta">የአማራ ምርጥ ዘር ድርጅት • 100 ኪ.ግ በኩንታል</div>
+            </div>
+            <div style="text-align:right">
+              <div class="item-price">4,800 ብር</div>
+              <button class="btn" style="padding:6px 12px;font-size:0.8rem;margin-top:6px" onclick="alert('ትዕዛዝዎ ተመዝግቧል! በቀበሌው መጋዘን መረከብ ይችላሉ።')">እዘዝ</button>
+            </div>
+          </div>
+
+          <div class="item-card">
+            <div class="item-main">
+              <h4>🌽 የቦቆሎ ምርጥ ዘር (BH-661)</h4>
+              <div class="item-meta">የኢትዮጵያ ግብርና ስራዎች ኮርፖሬሽን • 50 ኪ.ግ</div>
+            </div>
+            <div style="text-align:right">
+              <div class="item-price">3,900 ብር</div>
+              <button class="btn" style="padding:6px 12px;font-size:0.8rem;margin-top:6px" onclick="alert('ትዕዛዝዎ ተመዝግቧል! በቀበሌው መጋዘን መረከብ ይችላሉ።')">እዘዝ</button>
+            </div>
+          </div>
+
+          <div class="item-card">
+            <div class="item-main">
+              <h4>🧪 NPSB አፈር ማዳበሪያ</h4>
+              <div class="item-meta">ናይትሮጅን፣ ፎስፈረስና ቦሮን • 100 ኪ.ግ</div>
+            </div>
+            <div style="text-align:right">
+              <div class="item-price">4,200 ብር</div>
+              <button class="btn" style="padding:6px 12px;font-size:0.8rem;margin-top:6px" onclick="alert('ትዕዛዝዎ ተመዝግቧል! በቀበሌው መጋዘን መረከብ ይችላሉ።')">እዘዝ</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. PAYMENT TAB -->
+    <section id="tab-payment" class="tab-pane">
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">💳 ዲጂታል ክፍያ (Telebirr & CBE)</div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+          <button class="btn" style="background:#0F9D58" onclick="alert('ወደ ቴሌብር ሲስተም እየተገናኘ ነው...')">
+            📱 በቴሌብር (Telebirr) ይክፈሉ
+          </button>
+          <button class="btn" style="background:#5B21B6" onclick="alert('ወደ CBE Birr ሲስተም እየተገናኘ ነው...')">
+            🏦 በCBE Birr ይክፈሉ
+          </button>
+        </div>
+
+        <div style="background:#FFF3E0;border-left:4px solid #E65100;padding:12px;border-radius:8px;font-size:0.85rem">
+          <b>የክፍያ ማረጋገጫ፦</b> ክፍያ ሲፈጽሙ ወዲያውኑ ዲጂታል ደረሰኝ በኤስኤምኤስ እና በድረ-ገጹ ላይ ይሰጥዎታል።
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. GPS TRACKING TAB -->
+    <section id="tab-gps" class="tab-pane">
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">🚚 የማዳበሪያ ጭነት የቀጥታ ጂፒኤስ (GPS) ክትትል</div>
+        </div>
+
+        <div style="background:var(--background);border-radius:12px;padding:16px;margin-bottom:14px">
+          <div style="font-size:0.85rem"><b>ጭነት መለያ፦</b> ET-TRANS-89240</div>
+          <div style="font-size:0.85rem"><b>አሽከርካሪ፦</b> አቶ ታደሰ ገብሬ (0918765432)</div>
+          <div style="font-size:0.85rem"><b>መዳረሻ፦</b> አዴት 01 ቀበሌ ግብርና መጋዘን</div>
+          <div style="font-size:0.85rem;color:var(--primary);font-weight:700;margin-top:6px">🚚 አሁን ያለበት፦ ባህር ዳር አልፎ በመንገድ ላይ (88% ደርሷል)</div>
+        </div>
+
+        <button class="btn btn-secondary" onclick="alert('የጭነት መኪናው በ 45 ኪ/ሜ/ሰ ፍጥነት ወደ ቀበሌው መጋዘን እየተጓዘ ነው')">📍 ትክክለኛ ካርታ ክፈት</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal for Secret Developer Portal (Hidden from regular users, opened via 5-click PIN) -->
+  <div id="secret-modal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">🔒 ሚስጥራዊ የገንቢ ማዕከል</div>
+        <button class="close-btn" onclick="closeSecretModal()">&times;</button>
+      </div>
+
+      <!-- PIN Login Form -->
+      <div id="secret-login-form">
+        <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:14px">
+          ይህ ገጽ ለድህረ-ገጹና ለመተግበሪያው ፈጣሪ ብቻ የተፈቀደ ሚስጥራዊ የገቢ ማስተዳደሪያ ነው። ሚስጥር ፒን ቁጥርዎን ያስገቡ፦
+        </p>
+        <div class="form-group">
+          <input type="password" id="secret-pin-input" class="form-control" placeholder="ሚስጥር ፒን (7788)">
+        </div>
+        <button id="btn-submit-pin" class="btn">🔑 ማዕከሉን ክፈት</button>
+      </div>
+
+      <!-- Secret Creator Dashboard (Revealed after PIN 7788) -->
+      <div id="secret-dashboard" style="display:none">
+        <div style="background:linear-gradient(135deg, #0F766E, #065F46);color:white;border-radius:12px;padding:16px;margin-bottom:14px">
+          <div style="font-size:0.8rem;opacity:0.9">የተከማቸ ቀሪ ገቢ (Available Balance)</div>
+          <div id="creator-balance" style="font-size:1.8rem;font-weight:800">9,850 ETB</div>
+          <div style="font-size:0.75rem;margin-top:6px;opacity:0.85">እስካሁን የተከፈለ፦ <span id="creator-withdrawn">6,500 ETB</span></div>
+        </div>
+
+        <div style="font-size:0.85rem;font-weight:700;margin-bottom:8px">የገቢ ምንጮች ስሌት፦</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:14px">
+          <div>👤 የተጠቃሚዎች ምዝገባ፦ <b id="creator-reg-count">184</b></div>
+          <div>📲 የሊንክ ሼር፦ <b id="creator-share-count">96</b></div>
+          <div>❤️ ላይኮችና እይታዎች፦ <b id="creator-like-count">1,420</b></div>
+          <div>🌐 የቴሌኮም VAS ድርሻ፦ <b id="creator-vas-earned">4,250 ETB</b></div>
+        </div>
+
+        <div style="font-size:0.85rem;font-weight:700;margin-bottom:8px">ወደ ኢትዮጵያ ክፍያ ዘዴ ገንዘብ ማስተላለፊያ፦</div>
+        <div class="form-group">
+          <select id="creator-payout-method" class="form-control">
+            <option value="Telebirr">ቴሌብር (Telebirr)</option>
+            <option value="CBE Birr">የኢትዮጵያ ንግድ ባንክ (CBE)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <input type="text" id="creator-payout-acct" class="form-control" placeholder="የቴሌብር ስልክ ወይም CBE ሂሳብ ቁጥር">
+        </div>
+        <div class="form-group">
+          <input type="text" id="creator-payout-name" class="form-control" placeholder="የሂሳቡ ባለቤት ስም">
+        </div>
+        <button class="btn btn-secondary" style="margin-bottom:14px" onclick="saveCreatorPayoutDetails()">የመቀበያ መረጃን መዝግብ</button>
+
+        <div class="form-group">
+          <label class="form-label">የሚወጣው መጠን በብር</label>
+          <input type="number" id="creator-withdraw-amt" class="form-control" value="1000">
+        </div>
+        <button class="btn" style="background:#047857" onclick="requestCreatorPayout()">💸 ወዲያውኑ ወደ ቴሌብር/CBE አስተላልፍ</button>
+
+        <div style="font-size:0.85rem;font-weight:700;margin:16px 0 8px">የተፈጸሙ የክፍያ ዝርዝሮች፦</div>
+        <div id="creator-payout-history" style="max-height:140px;overflow-y:auto"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer with Discreet Secret Trigger -->
+  <footer>
+    <p>አርሶ አደር • የኢትዮጵያ ግብርና ዲጂታል ፖርታል</p>
+    <p>
+      <span id="secret-trigger" class="secret-trigger">Version 1.0 • Web App Edition</span>
+    </p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
